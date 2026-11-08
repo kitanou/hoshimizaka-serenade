@@ -8,7 +8,6 @@
 import io
 import os
 
-import cairosvg
 import numpy as np
 from PIL import Image
 
@@ -21,6 +20,7 @@ BUSTS = os.path.join(ROOT, "hoshimizaka", "game", "images", "chars", "misaki")
 
 
 def render(svg, w, h):
+    import cairosvg  # SVG を描くときだけ必要（ComfyUI の venv には無い）
     png = cairosvg.svg2png(bytestring=svg.encode(), output_width=w, output_height=h)
     return Image.open(io.BytesIO(png)).convert("RGBA")
 
@@ -50,29 +50,39 @@ def backgrounds():
 
 
 def misaki():
-    for expr in ("smile", "blush", "surprise"):
-        src = Image.open(os.path.join(BUSTS, f"bust_{expr}.png")).convert("RGBA")
-        save(reduce_colors(src.resize((300, 450), Image.LANCZOS), 48, True), f"chars/misaki_{expr}.png")
-        save(reduce_colors(src, 64, True), f"chars/misaki_{expr}_hi.png")
+    """美咲（OP 用表情）。本編と同じ layeredimage のパーツ差分（tools/misaki_parts.py）を合成して減色する。"""
+    from tools import misaki_parts as P
+    src = os.path.join(ROOT, "hoshimizaka", "game", "images", "chars", "misaki")
+    poses = {
+        "smile": ("open", "smile", "normal", False),
+        "blush": ("open", "smile", "normal", True),
+        "surprise": ("surprise", "surprise", "up", False),
+    }
+    for name, (e, m, b, bl) in poses.items():
+        big = P.compose(src, e, m, b, bl)
+        save(reduce_colors(big.resize((300, 450), Image.LANCZOS), 48, True), f"chars/misaki_{name}.png")
+        save(reduce_colors(big, 64, True), f"chars/misaki_{name}_hi.png")
 
 
 def touka():
+    """冬華（OP 用表情）。ComfyUI 生成のパーツ差分（tools/misaki_parts.py --char touka）を合成して減色する。"""
+    from tools import misaki_parts as P
+    src = os.path.join(ROOT, "hoshimizaka", "game", "images", "chars", "touka")
     poses = {
-        "cool": dict(eyes="open", mouth="cool", brows="cool"),
-        "smile": dict(eyes="open", mouth="smile", brows="normal"),
-        "surprise": dict(eyes="surprise", mouth="surprise", brows="up"),
-        "blush": dict(eyes="open", mouth="smile", brows="normal", blush=True),
+        "cool": ("open", "cool", "cool", False),
+        "smile": ("open", "smile", "normal", False),
+        "surprise": ("surprise", "surprise", "up", False),
+        "blush": ("open", "smile", "normal", True),
     }
-    for name, kw in poses.items():
-        big = render(C.flat("touka", **kw), 600, 900)
+    for name, (e, m, b, bl) in poses.items():
+        big = P.compose(src, e, m, b, bl)
         save(reduce_colors(big.resize((300, 450), Image.LANCZOS), 40, True), f"chars/touka_{name}.png")
         save(reduce_colors(big, 56, True), f"chars/touka_{name}_hi.png")
 
 
 def backs():
-    for cid in ("misaki", "touka"):
-        big = render(C.back_svg(cid), 600, 900)
-        save(reduce_colors(big.resize((300, 450), Image.LANCZOS), 32, True), f"chars/{cid}_back.png")
+    """後ろ姿は ComfyUI 生成（tools/char_back.py）に移行した。旧 SVG 版は使わない。"""
+    raise SystemExit("後ろ姿は python -m tools.char_back install misaki|touka で作る")
 
 
 def glow():
@@ -90,7 +100,8 @@ if __name__ == "__main__":
     # OP 背景（bg_op_*.png）は ComfyUI 生成（tools/bg_gen.py）に移行したので、ここでは作り直さない。
     # 旧ベクター調に戻したいときだけ backgrounds() を明示的に呼ぶこと。
 
+    # misaki(): 美咲の OP 表情は chars/misaki/bust_*.png から。touka(): 新パーツから。
+    # 後ろ姿は tools/char_back.py。ここでは glow だけ再生成しても害がない
     misaki()
     touka()
-    backs()
     glow()

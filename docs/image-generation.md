@@ -75,6 +75,20 @@ python -m tools.gen_rpy             # images.rpy を再生成
 - 眼鏡: 目のマスクから眼鏡フレームを除外して基準の線を残し、さらに `base_front` として上に重ねる。
 - 既知の課題: 怒り眉は前髪に隠れて弱い。頬染めは控えめ。参考パネル自体が左端で髪を切っているため、髪の左端が直線になる。
 
+### 冬華・後ろ姿
+
+- **冬華の基準バスト**は参考画像がないため、txt2img（896×1152、cfg 6.0）+ IP-Adapter 重み 0.3（美咲の基準バストを参照。0.45 以上だと髪が紫に寄る）で作り、seed 5 を採用した。髪色は `(blue hair:1.5), (royal blue hair:1.3)` と、Negative の紫・水色系で固定。前髪が眉に被るので眉・目のマスクは美咲より狭い。
+- `python -m tools.misaki_parts gen|build|sheet --char touka` で美咲と同じ手順でパーツを作る。`--kinds eyes_pout,brows_up` で一部の差分だけ作り直せる。
+- 後ろ姿は `python -m tools.char_back gen|install misaki|touka`（顔が写るので IP-Adapter は使えず、プロンプトのみ）。採用 seed はミサキ 2、冬華 1。
+- 既知の課題: 冬華の「怒り」眉は前髪に隠れて弱い。眼の「びっくり」は目の下に影が出る。後ろ姿の制服の白は透過時に淡くなる。
+
+### 髪・頭が切れる問題（アウトペイント）
+
+- 美咲の基準バストは参考シートのパネルを切り出したもので、枠で髪の左側が切れている。冬華は顔を美咲に合わせて拡大するため、頭頂・両側がはみ出す。
+- `python -m tools.misaki_parts extend --char misaki|touka`: 基準バストの上・左右（`PAD`）を端の画素で引き延ばし、ComfyUI で描き足して `output/<parts>/ext_base.png` を作る。2 回目に下側の左右（肩・袖）だけをもう一度描き足す。元画像の範囲は元のままにする。
+- `build` は `ext_base.png` があればそれを使い、窓（`SHRINK` = 0.78）を広げて全体を縮める。アウトペイントが余白に出した孤立した断片は、最大連結成分だけを残して除く。
+- 注意: 白い制服は背景の白と区別できないので、肩の外側は袖の輪郭線で終わる。冬華の長い髪の毛先は左端に触れる程度。
+
 ## 確定設定（seed 5 で検証）
 
 共通: steps 28 / cfg 6.0 / euler_ancestral / normal / clip skip 2 / IP-Adapter PLUS weight 0.6（linear, V only）

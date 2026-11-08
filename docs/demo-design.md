@@ -601,3 +601,10 @@ layeredimage misaki:
 - `bg_op_meteor_shower` / `bg_op_railway_crossing` / `bg_op_telescope_sky` は引き続き作らない。
 - `tools.gen_images`（引数なし）と `tools.op_assets` は背景を作り直さない（旧素材で上書きしないため）。
 
+### 14.8 冬華のパーツ差分と、ミサキ・冬華の後ろ姿
+
+- **冬華**: 参考画像がないので、txt2img に弱い IP-Adapter（重み 0.3、美咲の基準バスト入力）を掛けて、美咲と同じ画風・制服の基準バストを作った（髪は青、前髪ぱっつん・白いヘアバンド・長髪、眼鏡なし）。そこから `tools/misaki_parts.py --char touka` で、美咲と同じ手順（§14.6）の 19 レイヤーを作った。`images/chars/touka/` のファイル名・種類・`images.rpy` の宣言・表情プリセットは変更なし。旧（手続き生成のベクター調）は git 履歴に残る。
+- **後ろ姿**（OP CUT 10 / 12）: `tools/char_back.py` で生成し、300×450・48 色・ordered dither の透過 PNG にした（`images/op/chars/{misaki,touka}_back.png`）。
+- **OP の冬華表情**: `tools/op_assets.py` の `touka()` が新パーツを合成して作る。旧 SVG からの後ろ姿生成（`backs()`）は廃止。
+- **楓**は旧画風のまま（別作業）。
+

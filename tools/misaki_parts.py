@@ -54,6 +54,70 @@ REGIONS = {  # 楕円 (l, t, r, b), feather
 LASH_ZONES = [(190, 465, 268, 605), (262, 478, 335, 516), (450, 435, 645, 492), (592, 435, 650, 575)]
 CHEEKS = [(205, 590, 290, 640), (560, 575, 645, 625)]  # 頬染めの楕円
 
+# ── キャラ別設定（--char で切り替え。既定は misaki）────────────────────
+# 冬華は参考画像がないので、txt2img + 弱い IP-Adapter（美咲の画風・制服）で作った基準バストから始める。
+TOUKA_STYLE = ("retro artstyle, 1990s (style), official art, game cg, cel shading, soft shading, "
+               "thin dark lineart, delicate lineart, soft colors")
+TOUKA_CHAR = ("1girl, solo, (very long hair:1.3), straight hair, (blue hair:1.5), (royal blue hair:1.3), "
+              "(indigo blue hair:1.1), hime cut, blunt bangs, sidelocks, white hairband, (blue eyes:1.2), "
+              "large eyes, calm, serious, cool, tsurime, serafuku, white shirt, short sleeves, "
+              "(navy blue sailor collar:1.3), white stripes, red bowtie")
+TOUKA_FRAME = ("upper body, portrait, straight-on, front-facing, looking at viewer, symmetrical, "
+               "white background, simple background")
+TOUKA_NEG = ("lowres, bad anatomy, bad hands, text, error, cropped, worst quality, low quality, jpeg artifacts, "
+             "signature, watermark, blurry, 3d, photorealistic, chromatic aberration, glasses, eyewear, "
+             "black hair, dark hair, cyan hair, light blue hair, purple hair, lavender hair, violet hair, "
+             "pink hair, blonde hair, short hair, twintails, ponytail, high contrast, heavy shadow, thick outlines, "
+             "light blue collar, multiple girls, speech bubble, nsfw, sparkle eyes, star pupils")
+
+CONFIGS = {
+    "misaki": {},
+    "touka": dict(
+        work="parts_touka", game="touka",
+        base_src="output/touka/base.png",          # 基準バスト（tools/misaki_parts の docs 参照）
+        lens=None, pale_fringe=False,
+        positive=lambda tags: ", ".join([G.QUALITY, TOUKA_STYLE, TOUKA_CHAR, TOUKA_FRAME, tags]),
+        negative=TOUKA_NEG, cheek_rgb=(236, 120, 140),
+        regions={"brows": ((310, 262, 592, 312), 6), "eyes": ((305, 298, 600, 398), 10),
+                 "mouth": ((408, 412, 502, 472), 8)},
+        cheeks=[(325, 385, 400, 418), (505, 385, 580, 415)],
+        lash_zones=[], sheet_crop=(60, 100, 540, 460),
+        # 冬華は前髪が眉に被るので、眉は弱め・目の pout は上まぶたを落とし過ぎない（帯状の破綻を防ぐ）
+        tags={("eyes", "pout"): "(jitome:1.2), (glaring:1.2), annoyed, sharp eyes",
+              ("brows", "up"): "(raised eyebrows:1.2), surprised"},
+        denoise={("brows", "up"): 0.75, ("eyes", "pout"): 0.75},
+    ),
+}
+CHAR_NAME = "misaki"
+POSITIVE = None      # tags → Positive 全文（None なら comfy_gen の美咲用ブロック）
+NEGATIVE = None
+BASE_SRC = None      # 設定時はこの画像を基準として使い、ComfyUI で基準を作らない
+PALE_FRINGE = True   # 参考シートの印刷オフセット（薄青いフチ）を白扱いにする（美咲のみ）
+CHEEK_RGB = (236, 110, 130)
+SHEET_CROP = (60, 260, 540, 620)   # 確認シートで切り出す顔まわり（600x900 キャンバス上）
+
+
+def use(char):
+    """キャラ設定をモジュール定数へ反映する。"""
+    global WORK, GAME_DIR, CHAR_NAME, POSITIVE, NEGATIVE, BASE_SRC, PALE_FRINGE, CHEEK_RGB
+    global LENS_L, LENS_R, REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP
+    c = CONFIGS[char]
+    CHAR_NAME = char
+    if not c:
+        return
+    WORK = os.path.join(ROOT, "output", c["work"])
+    GAME_DIR = os.path.join(ROOT, "hoshimizaka", "game", "images", "chars", c["game"])
+    BASE_SRC = os.path.join(ROOT, c["base_src"])
+    POSITIVE, NEGATIVE, PALE_FRINGE, CHEEK_RGB = c["positive"], c["negative"], c["pale_fringe"], c["cheek_rgb"]
+    if c["lens"] is None:
+        LENS_L = LENS_R = None
+    REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP = c["regions"], c["cheeks"], c["lash_zones"], c["sheet_crop"]
+    for (part, kind), t in c.get("tags", {}).items():
+        TAGS[part][kind] = t
+    for (part, kind), d in c.get("denoise", {}).items():
+        DENOISE_KIND[(part, kind)] = d
+
+
 # 各差分の inpaint 用タグ（表情タグのみ。キャラ・画風は comfy_gen と共通）
 TAGS = {
     "eyes": {
@@ -82,6 +146,7 @@ TAGS = {
 # 部位別に Negative へ足すタグ（片目だけ閉じるウインクを防ぐ）
 NEG_EXTRA = {"eyes": "(wink:1.4), (one eye closed:1.4)"}
 DENOISE = {"eyes": 0.85, "mouth": 0.85, "brows": 0.9}
+DENOISE_KIND = {}   # (部位, 種類) ごとの上書き
 KINDS = {"eyes": EYE_KINDS, "mouth": MOUTH_KINDS, "brows": BROW_KINDS}
 
 # 表情プリセット（hoshimizaka/game/characters.rpy の _BASE と同じ）。確認シート用
@@ -102,6 +167,8 @@ def ellipse_mask(box, feather):
 
 def glasses_mask(base):
     """基準画像から眼鏡フレームの画素を抜き出す（レンズ楕円の輪帯 + ブリッジ内の暗い画素）。"""
+    if LENS_L is None:  # 眼鏡なし（冬華）
+        return Image.new("L", WH, 0)
     band = Image.new("L", WH, 0)
     d = ImageDraw.Draw(band)
     for cx, cy, rx, ry in (LENS_L, LENS_R):
@@ -139,28 +206,33 @@ def _args(**kw):
     return a
 
 
-def gen(only=None):
+def gen(only=None, kinds=None):
     os.makedirs(WORK, exist_ok=True)
     base_path = os.path.join(WORK, "expr", f"base_s{SEED}.png")
-    if not (only and os.path.exists(base_path)):
-        G.run(_args(preset="expr", denoise=0.0, name="base", seed=SEED, out="output/parts"))
+    if BASE_SRC:
+        os.makedirs(os.path.dirname(base_path), exist_ok=True)
+        Image.open(BASE_SRC).convert("RGB").save(base_path)
+    elif not (only and os.path.exists(base_path)):
+        G.run(_args(preset="expr", denoise=0.0, name="base", seed=SEED, out=os.path.relpath(WORK, ROOT)))
     base = Image.open(base_path)
     inp = os.path.join(G.COMFY, "input")
-    base.save(os.path.join(inp, "ms_parts_base.png"))
+    base.save(os.path.join(inp, f"ms_{CHAR_NAME}_parts_base.png"))
     for part, m in masks(base).items():
-        m.save(os.path.join(inp, f"ms_parts_mask_{part}.png"))
+        m.save(os.path.join(inp, f"ms_{CHAR_NAME}_mask_{part}.png"))
         m.save(os.path.join(WORK, f"mask_{part}.png"))
     for part, table in TAGS.items():
         if only and part not in only:
             continue
         for kind, tags in table.items():
-            if tags is None:
+            if tags is None or (kinds and f"{part}_{kind}" not in kinds):
                 continue
             # 基準画像を初期画像に、清書パスなしで該当部位だけ inpaint
-            G.run(_args(preset="expr", init="ms_parts_base.png", mask=f"ms_parts_mask_{part}.png",
-                        refine=0.0, denoise=DENOISE[part], tags=tags, name=f"{part}_{kind}",
-                        negative=G.NEG + (", " + NEG_EXTRA[part] if part in NEG_EXTRA else ""),
-                        seed=SEED, out="output/parts"))
+            extra = ", " + NEG_EXTRA[part] if part in NEG_EXTRA else ""
+            kw = dict(positive=POSITIVE(tags), ip_weight=0.0) if POSITIVE else {}
+            G.run(_args(preset="expr", init=f"ms_{CHAR_NAME}_parts_base.png", mask=f"ms_{CHAR_NAME}_mask_{part}.png",
+                        refine=0.0, denoise=DENOISE_KIND.get((part, kind), DENOISE[part]), tags=tags, name=f"{part}_{kind}",
+                        negative=(NEGATIVE or G.NEG) + extra,
+                        seed=SEED, out=os.path.relpath(WORK, ROOT), **kw))
 
 
 # ── レイヤー化 ────────────────────────────────────────────────
@@ -176,8 +248,9 @@ class Raster:
         rgb = np.asarray(base.convert("RGB")).copy()
         ci = rgb.astype(int)
         mx, mn = ci.max(axis=2), ci.min(axis=2)
-        pale = (mn >= 150) & (ci[..., 2] >= ci[..., 0] + 12) & (mx - mn < 100)
-        rgb[pale] = 255
+        if PALE_FRINGE:
+            pale = (mn >= 150) & (ci[..., 2] >= ci[..., 0] + 12) & (mx - mn < 100)
+            rgb[pale] = 255
         self.alpha_full = PP.remove_white_bg(Image.fromarray(rgb), side_limit=0.62,
                                              bottom=False).getchannel("A")
         self.bbox = self.alpha_full.getbbox()
@@ -217,7 +290,7 @@ def blush_layer(R):
     over = Image.new("RGBA", WH, (0, 0, 0, 0))
     d = ImageDraw.Draw(over)
     for l, t, r, b in CHEEKS:
-        d.ellipse((l, t, r, b), fill=(236, 110, 130, 110))
+        d.ellipse((l, t, r, b), fill=(*CHEEK_RGB, 110))
     over = over.filter(ImageFilter.GaussianBlur(6))
     d = ImageDraw.Draw(over)
     for l, t, r, b in CHEEKS:
@@ -281,7 +354,7 @@ def sheet(dest=GAME_DIR):
     for name, (e, m, b, bl) in PRESETS.items():
         im = compose(dest, e, m, b, bl)
         bbox = im.getbbox()
-        crop = im.crop((60, 260, 540, 620))  # 顔まわり
+        crop = im.crop(SHEET_CROP)  # 顔まわり
         bg = Image.new("RGBA", crop.size, (180, 200, 220, 255))
         bg.alpha_composite(crop)
         d = ImageDraw.Draw(bg)
@@ -301,12 +374,16 @@ def sheet(dest=GAME_DIR):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("cmd", choices=["gen", "build", "sheet", "masks"])
-    p.add_argument("--dest", default=GAME_DIR)
+    p.add_argument("--char", choices=list(CONFIGS), default="misaki")
+    p.add_argument("--dest", default=None, help="既定: そのキャラの images/chars/<char>/")
     p.add_argument("--colors", type=int, default=64)
     p.add_argument("--only", default=None, help="gen: 生成する部位（例: brows,eyes）")
+    p.add_argument("--kinds", default=None, help="gen: 生成する差分（例: eyes_pout,brows_up）")
     a = p.parse_args()
+    use(a.char)
+    a.dest = a.dest or GAME_DIR
     if a.cmd == "gen":
-        gen(a.only.split(",") if a.only else None)
+        gen(a.only.split(",") if a.only else None, a.kinds.split(",") if a.kinds else None)
     elif a.cmd == "masks":  # マスク位置の確認用
         base = Image.open(_gen_path("base")).convert("RGB")
         over = base.copy()

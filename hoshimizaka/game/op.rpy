@@ -1,6 +1,6 @@
 ## オープニング（約30秒・全13カット）。絵コンテ: docs/op-storyboard.md
 ## 曲 audio/bgm/op.ogg（128BPM・16小節）の再生位置を基準に、各カットの開始秒で場面を切り替える。
-## 背景は人物なしのドット絵プレート（images/op/bg_op_*.png、320x240 を 2 倍・Nearest で拡大）。
+## 背景は人物なしの背景プレート（images/op/bg_op_*.png。ComfyUI 生成 → 640x480 で減色・ディザ → 2 倍 Nearest の 1280x960。tools/bg_gen.py）。
 ## キャラクターは別の透過PNG（images/op/chars/）で、背景の前面に合成する。
 
 
@@ -244,12 +244,12 @@ transform op_credits:
 ## ---------------------------------------------------------------- 画像
 
 ## 背景プレート（人物なし）。320x240 のドット絵を 2 倍・Nearest で拡大する
-image op_bg_starry = Transform("images/op/bg_op_starry_sky.png", zoom=2, nearest=True)
-image op_bg_title = Transform("images/op/bg_op_title_sky.png", zoom=2, nearest=True)
-image op_bg_observatory = Transform("images/op/bg_op_observatory_night.png", zoom=2, nearest=True)
-image op_bg_lamp = Transform("images/op/bg_op_slope_lamp.png", zoom=2, nearest=True)
-image op_bg_twilight = Transform("images/op/bg_op_town_twilight.png", zoom=2, nearest=True)
-image op_bg_hill = Transform("images/op/bg_op_hill_meteor_shower.png", zoom=2, nearest=True)
+image op_bg_starry = Transform("images/op/bg_op_starry_sky.png", zoom=0.5)
+image op_bg_title = Transform("images/op/bg_op_title_sky.png", zoom=0.5)
+image op_bg_observatory = Transform("images/op/bg_op_observatory_night.png", zoom=0.5)
+image op_bg_lamp = Transform("images/op/bg_op_slope_lamp.png", zoom=0.5)
+image op_bg_twilight = Transform("images/op/bg_op_town_twilight.png", zoom=0.5)
+image op_bg_hill = Transform("images/op/bg_op_hill_meteor_shower.png", zoom=0.5)
 
 ## キャラクター（透過PNG）。通常は 300x450、アップ用は *_hi（600x900）
 image op_misaki_smile = "images/op/chars/misaki_smile.png"

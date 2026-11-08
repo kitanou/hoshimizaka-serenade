@@ -87,7 +87,9 @@ def glow():
 
 
 if __name__ == "__main__":
-    backgrounds()
+    # OP 背景（bg_op_*.png）は ComfyUI 生成（tools/bg_gen.py）に移行したので、ここでは作り直さない。
+    # 旧ベクター調に戻したいときだけ backgrounds() を明示的に呼ぶこと。
+
     misaki()
     touka()
     backs()

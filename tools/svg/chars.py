@@ -208,3 +208,41 @@ def flat(char_id, eyes="open", mouth="smile", brows="normal", blush=False):
     parts += [base_front_svg(c), brow_svg(c, brows)]
     # defs（グラデ/クリップ）は eye_svg だけが持つので、そのまま連結して OK
     return _wrap("".join(inner(p) for p in parts))
+
+
+# ---------------------------------------------------------------- 後ろ姿（OP の CUT 10 / 12 用）
+BACK_STYLE = {
+    "misaki": dict(hair="#d9587c", hairD="#a83458", hairL="#f4a0b4", long=False),
+    "touka": dict(hair="#4a5cbc", hairD="#26327a", hairL="#b2c0ff", long=True),
+}
+
+
+def back_svg(cid):
+    """後ろ姿（頭の後ろ・髪・セーラー襟）。顔は描かない。viewBox は他レイヤーと同じ 0 0 400 600。"""
+    c = BACK_STYLE[cid]
+    H, HD, HL = c["hair"], c["hairD"], c["hairL"]
+    body = (
+        f'<path d="M178,290 L178,362 L222,362 L222,290 Z" fill="{SKIN}"/>'
+        f'<path d="M60,600 C66,480 96,392 165,352 L235,352 C304,392 334,480 340,600 Z" fill="#fbfbff"/>'
+        # セーラー襟（背中側は四角い大きな襟）
+        f'<path d="M132,356 L268,356 L316,404 L316,486 L84,486 L84,404 Z" fill="#26397c"/>'
+        f'<path d="M100,414 L300,414 M100,432 L300,432" stroke="#fff" stroke-width="3.5" fill="none"/>'
+        f'<path d="M84,486 L316,486" stroke="#fff" stroke-width="3" fill="none"/>'
+    )
+    if c["long"]:
+        hair = (
+            f'<path d="M126,120 C92,240 84,420 78,566 L322,566 C316,420 308,240 274,120 C250,66 150,66 126,120 Z" fill="{H}"/>'
+            f'<path d="M110,300 C104,400 100,490 98,566 M200,150 C200,300 200,440 200,566 M290,300 C296,400 300,490 302,566" '
+            f'fill="none" stroke="{HD}" stroke-width="2"/>'
+            f'<path d="M142,112 Q200,88 258,112" fill="none" stroke="{HL}" stroke-width="7" stroke-linecap="round" opacity=".85"/>'
+            f'<path d="M124,146 Q200,48 276,146" fill="none" stroke="{LINE}" stroke-width="13" stroke-linecap="round"/>'
+            f'<path d="M124,146 Q200,48 276,146" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>'
+        )
+    else:
+        hair = (
+            f'<path d="M128,150 C112,58 288,58 272,150 C292,226 290,292 270,322 C240,336 160,336 130,322 C110,292 108,226 128,150 Z" fill="{H}"/>'
+            f'<path d="M150,120 C146,200 148,270 152,316 M200,100 C200,200 200,270 200,318 M250,120 C254,200 252,270 248,316" '
+            f'fill="none" stroke="{HD}" stroke-width="2"/>'
+            f'<path d="M142,112 Q200,86 258,112" fill="none" stroke="{HL}" stroke-width="7" stroke-linecap="round" opacity=".85"/>'
+        )
+    return _wrap(f'<g stroke="{LINE}" stroke-width="3" stroke-linejoin="round">{body}{hair}</g>')

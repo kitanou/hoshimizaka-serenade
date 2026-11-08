@@ -21,7 +21,7 @@
 |---|---|---|
 | 収録範囲 | 4/8 始業式の1日 | プロローグ＋第1章（4/8〜4/10 の3日間） |
 | 選択肢 | 1回（ジャンプのみ） | 4回（好感度が変わる） |
-| エンディング | 1種（体験版終了カード） | 3種（ミオ予告END／冬華予告END／ノーマル予告END） |
+| エンディング | 1種（体験版終了カード） | 3種（ミサキ予告END／冬華予告END／ノーマル予告END） |
 | プレイ時間 | 約3分 | 約25〜35分（1周）、全END回収で約60分 |
 | 本文 | 約70行 | 約700〜900行 |
 | 背景 | 7種 | 12種（§7.2） |
@@ -188,10 +188,10 @@ define gui.text_size = 19                   # プロトタイプと同じ 19px�
 ### 5.1 ゲーム変数（セーブに含まれる）
 
 ```python
-default mio_aff   = 0        # ミオ好感度
+default misaki_aff   = 0        # ミサキ好感度
 default touka_aff = 0        # 冬華好感度
 default joined_astro = False # 天文部に入部したか（day1 の選択で決まる）
-default promised_mio = False # 流星群の約束をしたか
+default promised_misaki = False # 流星群の約束をしたか
 default met_kaede = False    # サブキャラ・楓と会ったか（day2）
 ```
 
@@ -203,7 +203,7 @@ default met_kaede = False    # サブキャラ・楓と会ったか（day2）
 
 ```python
 default persistent.op_seen = False
-default persistent.endings_seen = set()   # {"mio", "touka", "normal"}
+default persistent.endings_seen = set()   # {"misaki", "touka", "normal"}
 default persistent.crt = True
 ```
 
@@ -213,9 +213,9 @@ default persistent.crt = True
 
 ```python
 label decide_ending:
-    if mio_aff >= 3 and mio_aff > touka_aff:
-        jump end_mio
-    elif touka_aff >= 3 and touka_aff > mio_aff:
+    if misaki_aff >= 3 and misaki_aff > touka_aff:
+        jump end_misaki
+    elif touka_aff >= 3 and touka_aff > misaki_aff:
         jump end_touka
     else:
         jump end_normal       # 同点・どちらも閾値未満
@@ -230,7 +230,7 @@ label decide_ending:
 | ID | 表示名 | 名前欄の色（プロトタイプの `#name.*`） | 立ち絵 |
 |---|---|---|---|
 | `y` | ユウキ | 緑 `#a8e6a0→#3f9a5a` | なし（主人公は立ち絵なし。プロトタイプと同じ） |
-| `m` | ミオ | ピンク `#ffa6cc→#e0508a` | あり |
+| `m` | ミサキ | ピンク `#ffa6cc→#e0508a` | あり |
 | `t` | 冬華 | 水色 `#8fd6ff→#3a6ad0` | あり |
 | `k` | 楓（新規・サブ） | 橙 | あり（表情4種） |
 | `n` | （地の文） | なし | — |
@@ -238,11 +238,11 @@ label decide_ending:
 
 ```python
 define y = Character("ユウキ", namebox_background=Frame("gui/namebox_yuki.png", 8, 8))
-define m = Character("ミオ",  image="mio",   namebox_background=Frame("gui/namebox_mio.png", 8, 8))
+define m = Character("ミサキ",  image="misaki",   namebox_background=Frame("gui/namebox_misaki.png", 8, 8))
 define t = Character("冬華",  image="touka", namebox_background=Frame("gui/namebox_touka.png", 8, 8))
 define n = Character(None, what_italic=False)
 # 正体が明かされる前の台詞用。表情タグは引き継ぐが、名前欄は灰色にする（ピンクだと正体がばれる）
-define m_q = Character("？？？", image="mio", kind=m, namebox_background=Frame("gui/namebox_unknown.png", 8, 8))
+define m_q = Character("？？？", image="misaki", kind=m, namebox_background=Frame("gui/namebox_unknown.png", 8, 8))
 ```
 
 - `image=` を指定しておくと、`m happy "台詞"` の形で表情を切り替えながら喋らせられる（プロトタイプの `show` と `say` の組を1行にまとめられる）。
@@ -256,8 +256,8 @@ define m_q = Character("？？？", image="mio", kind=m, namebox_background=Fram
 プロトタイプの `charSVG` は、後ろ髪、体、顔、目、口、眉、頬染め、前髪、アクセサリの順に**パーツを重ねて**描いている。この構造を `layeredimage` にそのまま移す。
 
 ```python
-layeredimage mio:
-    always "mio_base_back"         # 後ろ髪＋体＋顔
+layeredimage misaki:
+    always "misaki_base_back"         # 後ろ髪＋体＋顔
     group eyes auto:
         attribute e_open default
         attribute e_happy
@@ -272,7 +272,7 @@ layeredimage mio:
     group cheek:
         attribute no_blush default null
         attribute blush
-    always "mio_base_front"        # 前髪＋横の房＋リボン＋髪のハイライト
+    always "misaki_base_front"        # 前髪＋横の房＋リボン＋髪のハイライト
     group brows auto:              # 眉は前髪の上（プロトタイプと同じ）
         attribute b_normal default
         attribute b_up
@@ -295,17 +295,17 @@ layeredimage mio:
   | **angry**（新規） | open | pout | angry | — | |
   | **closed**（新規） | 閉じ | smile | normal | — | |
 
-  実装メモ: プリセットは `image mio happy = LayeredImageProxy(...)` ではなく、`layeredimage` の `attribute` に `if_any` を組み合わせるか、`define config.adjust_attributes["mio"]` で `happy` を `e_happy m_happy blush` に展開する。後者の方が脚本の表記が短い。
+  実装メモ: プリセットは `image misaki happy = LayeredImageProxy(...)` ではなく、`layeredimage` の `attribute` に `if_any` を組み合わせるか、`define config.adjust_attributes["misaki"]` で `happy` を `e_happy m_happy blush` に展開する。後者の方が脚本の表記が短い。
   **プリセットは必ず4グループ（目・口・眉・頬）すべてを指定する**（例: `smile` → `e_open m_smile b_normal no_blush`）。どれかを省くと、直前の表情の属性（`blush` など）が残ってしまう。
 
 - **まばたき**: `e_open` を ATL の画像にして、プロトタイプの `blinkO/blinkC`（4.4秒周期）を再現する。周期に `renpy.random` で揺らぎを入れる。
   ```
-  image mio_eyes_open_anim:
-      "mio_e_open"
+  image misaki_eyes_open_anim:
+      "misaki_e_open"
       choice: 3.2
       choice: 4.4
       choice: 5.0
-      "mio_e_closed"
+      "misaki_e_closed"
       0.12
       repeat
   ```
@@ -332,7 +332,7 @@ layeredimage mio:
 
 - 桜の花びら（`bg slope*`／`bg classroom` に付ける）は Ren'Py の `SnowBlossom("images/fx/petal.png", count=16, xspeed=(-40,-20), yspeed=(80,140))` に置き換える。
 - 流れ星（`bg night`）は ATL の画像 `fx_shoot` を背景の上に重ねる。
-- CG: `cg mio_end`／`cg touka_end`／`cg normal_end`（新規3枚）
+- CG: `cg misaki_end`／`cg touka_end`／`cg normal_end`（新規3枚）
 
 ### 7.3 BGM
 
@@ -343,7 +343,7 @@ layeredimage mio:
 | `day` | 坂道ステップ | 日常（昼） | 既存 |
 | `evening` | 夕凪メモリー | 放課後・夕方 | 新規 |
 | `touka` | 冬華のテーマ（静かめ・三拍子） | 冬華の場面 | 新規 |
-| `mio` | ミオのテーマ（明るいポップ） | ミオの場面 | 新規 |
+| `misaki` | ミサキのテーマ（明るいポップ） | ミサキの場面 | 新規 |
 | `tension` | 胸さわぎ | 衝突・すれ違い | 新規 |
 
 - チャンネル: Ren'Py 標準の `music`／`sound`／`voice`。SE を重ねるために `renpy.music.register_channel("sound2", "sfx", loop=False)` を足す。
@@ -372,13 +372,13 @@ layeredimage mio:
 
 | label | 日付 | 内容 | 場所 | 主なBGM | 選択肢 |
 |---|---|---|---|---|---|
-| `prologue` | 4/8 朝 | 帰郷。坂でミオと衝突・再会（プロトタイプ前半） | slope | day | — |
+| `prologue` | 4/8 朝 | 帰郷。坂でミサキと衝突・再会（プロトタイプ前半） | slope | day | — |
 | `day1` | 4/8 | 教室で冬華と出会う。星降りの伝説 | classroom | day | — |
-| `day1_after` | 4/8 放課後 | **選択①** ミオと帰る／屋上へ | classroom_evening→ | evening | ① |
-| `day2` | 4/9 | 天文部の廃部危機が明らかになる。サブキャラ楓が登場（ミオの親友・新聞部） | hallway, clubroom | day/touka | ② |
-| `day2_lunch` | 4/9 昼 | **選択②** 屋上で弁当（ミオ）／部室の掃除（冬華） | rooftop/clubroom | mio/touka | ② |
-| `day3` | 4/10 | ミオと冬華が初めてまともに話す。すれ違い | classroom | tension | ③ |
-| `day3_night` | 4/10 夜 | **選択③** 夜の屋上で天体観測（冬華）／坂の上でミオと話す。**選択④**はその場面での返答 | rooftop_night / slope_night | touka/mio | ③④ |
+| `day1_after` | 4/8 放課後 | **選択①** ミサキと帰る／屋上へ | classroom_evening→ | evening | ① |
+| `day2` | 4/9 | 天文部の廃部危機が明らかになる。サブキャラ楓が登場（ミサキの親友・新聞部） | hallway, clubroom | day/touka | ② |
+| `day2_lunch` | 4/9 昼 | **選択②** 屋上で弁当（ミサキ）／部室の掃除（冬華） | rooftop/clubroom | misaki/touka | ② |
+| `day3` | 4/10 | ミサキと冬華が初めてまともに話す。すれ違い | classroom | tension | ③ |
+| `day3_night` | 4/10 夜 | **選択③** 夜の屋上で天体観測（冬華）／坂の上でミサキと話す。**選択④**はその場面での返答 | rooftop_night / slope_night | touka/misaki | ③④ |
 | `decide_ending` | — | 好感度で分岐する | — | — | — |
 | `end_*` | — | 予告エンド（CG1枚＋数行）→ 体験版終了カード | night ほか | title | — |
 
@@ -386,12 +386,12 @@ layeredimage mio:
 
 | # | 選択肢 | 効果 |
 |---|---|---|
-| ① | ミオといっしょに帰る | `mio_aff += 1`, `promised_mio = True` |
+| ① | ミサキといっしょに帰る | `misaki_aff += 1`, `promised_misaki = True` |
 |   | 屋上へ行ってみる | `touka_aff += 1`, `joined_astro = True` |
-| ② | 屋上でミオとお弁当 | `mio_aff += 1` |
+| ② | 屋上でミサキとお弁当 | `misaki_aff += 1` |
 |   | 部室の掃除を手伝う | `touka_aff += 1`（`joined_astro` が False なら、ここで入部の流れになる） |
 | ③ | 夜の屋上へ | `touka_aff += 1` |
-|   | 坂のてっぺんへ | `mio_aff += 1` |
+|   | 坂のてっぺんへ | `misaki_aff += 1` |
 | ④ | （③の先で、相手の悩みへの返答。2択） | 正解で該当ヒロインに `+1`、不正解で `±0` |
 
 - 片方のヒロインを一貫して選び、④でも正解すると 4 点、閾値 3 以上でそのヒロインの END になる。選択が割れるとノーマルになる。
@@ -404,14 +404,14 @@ layeredimage mio:
 | `{bg:'slope'}` | `scene bg slope with dissolve` |
 | `{bgm:'day'}` | `play music day fadein 1.0` |
 | `{narr:'…'}` | `n "…"`（または地の文として `"…"`） |
-| `{say:'ミオ',text:'…'}` | `m "…"` |
-| `{show:'mio',expr:'happy',pos:'center'}` | `show mio happy at pos_c` |
+| `{say:'ミサキ',text:'…'}` | `m "…"` |
+| `{show:'misaki',expr:'happy',pos:'center'}` | `show misaki happy at pos_c` |
 | 表情＋台詞 | `m happy "…"` |
-| `{hide:'all'}` | `scene` で一括、または `hide mio` |
+| `{hide:'all'}` | `scene` で一括、または `hide misaki` |
 | `{fx:'shake'}` | `with hpunch`（または独自の `transform shake`）＋ `play sound hit` |
-| `{choice:[…]}` | `menu:` ブロック（各項目の中で `$ mio_aff += 1`） |
+| `{choice:[…]}` | `menu:` ブロック（各項目の中で `$ misaki_aff += 1`） |
 | `{label:'x'}` / `{jump:'x'}` | `label x:` / `jump x` |
-| `{endcard:true}` | `call screen demo_end("mio")` → `return` |
+| `{endcard:true}` | `call screen demo_end("misaki")` → `return` |
 
 ---
 
@@ -435,7 +435,7 @@ layeredimage mio:
       (0.0,    1.875, "op_presents"),
       (1.875,  3.75,  "op_meteor"),
       (3.75,   7.5,   "op_logo"),
-      (7.5,    9.375, "op_mio_intro"),
+      (7.5,    9.375, "op_misaki_intro"),
       ...
       (26.25, 31.0,   "op_final_logo"),
   ]
@@ -505,7 +505,7 @@ layeredimage mio:
 | フェーズ | 内容 | 完了条件 |
 |---|---|---|
 | P0 | Ren'Py プロジェクトの作成、解像度・フォント・Character の設定 | 「Hello」が日本語で表示される |
-| P1 | 素材パイプライン（画像）: 既存の背景7種と立ち絵2人のレイヤー書き出し | `show mio happy at pos_c` が表示される |
+| P1 | 素材パイプライン（画像）: 既存の背景7種と立ち絵2人のレイヤー書き出し | `show misaki happy at pos_c` が表示される |
 | P2 | プロトタイプの脚本を `prologue`〜`day1_after` に移植。仮の BGM で動かす | プロトタイプと同じ内容を最後まで遊べる |
 | P3 | 素材パイプライン（音）: 既存3曲と SE を OGG 化 | 本編で BGM と SE が鳴る |
 | P4 | UI スキン（say／choice／main_menu／game_menu／quick_menu）、CRT オーバーレイ | 90年代風の見た目になる |
@@ -514,3 +514,41 @@ layeredimage mio:
 | P7 | splash と OP | T6 が通る |
 | P8 | おまけ（OP鑑賞・ENDリスト）、設定画面の仕上げ | — |
 | P9 | テスト（§11）、ビルド（Win/Mac/Linux）、配布 | 全項目 OK |
+
+---
+
+## 14. 実装状況（2026-11-08 時点）
+
+`hoshimizaka/` に Ren'Py 8.5.3 のプロジェクトとして実装済み。`renpy lint` は警告なし。
+
+### 14.1 設計どおりに入ったもの
+
+- 640×480 のプロジェクト、日本語 UI、90年代風ウィンドウ・名前欄（キャラ別の色）・CRT 走査線（設定で ON/OFF）
+- layeredimage の立ち絵 3 人（ミサキ／冬華／楓）。後ろ側・前側の 2 枚＋目・口・頬・眉。表情は 10 種のプリセットを 4 グループへ展開
+- 背景 12、CG 3、BGM 7、SE 10（すべて `tools/` で手続き生成）
+- 起動画面（BIOS 風）→ 初回のみ OP → タイトル（はじめから／つづきから／オープニング／おまけ／設定／終了）
+- OP は ATL で再構成（12 カット＋カラオケ字幕）。スキップはクリック／Enter
+- 本編: プロローグ＋第1〜3日、選択肢 4 回、好感度による予告エンディング 3 種、体験版終了カード、おまけ（エンディング一覧）
+- Ren'Py 標準のセーブ／ロード／ログ／オート／スキップ／ロールバック、BGM と SE の別音量
+- `.rpyc` をコミットする運用（§5.1）、プロトタイプは `prototype/index.html` へ移動
+
+### 14.2 設計と違うもの・足りないもの
+
+| 項目 | 設計 | 実際 |
+|---|---|---|
+| 本文の量 | 約 700〜900 行、1 周 25〜35 分 | **約 150 ブロック（lint の台詞数）。1 周は十数分** |
+| 冬華のテーマ曲 | 三拍子 | 四拍子（シーケンサが 1 小節=16 ステップ固定のため） |
+| 表情 `cool`（冬華） | — | 通常表情の眉を `b_cool` にしている |
+| サブキャラ楓 | 表情 4 種 | 立ち絵は 10 種のプリセットすべて使用可。出番は day2・day3・ノーマル END |
+| 配布ビルド | Win/Mac/Linux | **未実施**（SDK のランチャーで「ビルド」） |
+| 手動確認 | T4〜T8, T10 | **未確認**（旧セーブ互換・既読スキップ・OP 同期・拡大表示・誤字校正） |
+
+### 14.3 自動テスト（`tools/run_tests.sh`）
+
+テストケースごとに別プロセスで実行する（`testcases.rpy`）。
+
+- `boot`: BIOS → OP（9 か所でスクリーンショット）→ タイトル
+- `prologue_shots`: プロローグの立ち絵・会話ウィンドウ
+- `route_misaki` / `route_touka` / `route_normal`: 3 エンディングに到達し、`persistent.endings_seen` を確認（T2）
+- `ui_screens`: 設定・セーブ・ログ・おまけ画面
+- `save_load`: 変数を保存→書き換え→ロードで復元（T3）

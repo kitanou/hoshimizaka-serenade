@@ -1,0 +1,16 @@
+# Ren'Py（.rpyc はセーブ互換のためコミットする。docs/demo-design.md §5.1）
+hoshimizaka/game/cache/
+hoshimizaka/game/saves/
+hoshimizaka/saves/
+hoshimizaka/*.txt
+hoshimizaka/tests/
+hoshimizaka/dists/
+*.rpyb
+log.txt
+traceback.txt
+errors.txt
+# Python
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

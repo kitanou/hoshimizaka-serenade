@@ -169,7 +169,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #win[hidden]{display:none}
 #name{position:absolute;left:24px;top:-17px;min-width:70px;text-align:center;padding:2px 16px;font-size:15px;font-weight:bold;letter-spacing:.15em;
   border:2px solid #fff;border-radius:5px;background:linear-gradient(#9aa6c8,#5a6488);box-shadow:0 2px 0 #1a1f55}
-#name.mio{background:linear-gradient(#ffa6cc,#e0508a)}
+#name.misaki{background:linear-gradient(#ffa6cc,#e0508a)}
 #name.touka{background:linear-gradient(#8fd6ff,#3a6ad0)}
 #name.yuki{background:linear-gradient(#a8e6a0,#3f9a5a)}
 #name[hidden]{display:none}
@@ -227,12 +227,12 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
     <div class="cut" data-s="7.5" data-e="9.375">
       <div class="stripes"></div>
       <div class="bigcircle"></div>
-      <div class="op-spr in-right" id="opMio" style="left:250px;top:40px;width:340px;height:510px"></div>
-      <div class="vname" style="left:60px;top:40px">朝比奈ミオ<small>MIO ASAHINA</small></div>
+      <div class="op-spr in-right" id="opMisaki" style="left:250px;top:40px;width:340px;height:510px"></div>
+      <div class="vname" style="left:60px;top:40px">朝比奈ミサキ<small>MISAKI ASAHINA</small></div>
     </div>
     <div class="cut" data-s="9.375" data-e="11.25">
       <div class="speed"></div>
-      <div class="op-spr zoomin" id="opMioEye" style="left:0;top:110px;width:640px;height:340px"></div>
+      <div class="op-spr zoomin" id="opMisakiEye" style="left:0;top:110px;width:640px;height:340px"></div>
     </div>
     <div class="cut" data-s="11.25" data-e="15">
       <div class="op-spr pan" id="opRoof" style="inset:0"></div>
@@ -244,7 +244,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
     </div>
     <div class="cut" data-s="15" data-e="15.9375">
       <div class="halftone y"></div>
-      <div class="op-spr zoomin" id="opMioFace" style="left:120px;top:0;width:400px;height:480px"></div>
+      <div class="op-spr zoomin" id="opMisakiFace" style="left:120px;top:0;width:400px;height:480px"></div>
     </div>
     <div class="cut" data-s="15.9375" data-e="16.875">
       <div class="halftone c"></div>
@@ -261,7 +261,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
     <div class="cut" data-s="18.75" data-e="22.5">
       <div class="pump" style="position:absolute;inset:0">
         <div class="sunburst"></div>
-        <div class="op-spr bounce" id="opMio2" style="left:30px;top:50px;width:300px;height:450px"></div>
+        <div class="op-spr bounce" id="opMisaki2" style="left:30px;top:50px;width:300px;height:450px"></div>
         <div class="op-spr bounce" id="opTouka2" style="left:310px;top:40px;width:310px;height:465px;animation-delay:.15s"></div>
         <div class="spark" style="left:40px;top:60px"></div>
         <div class="spark" style="left:560px;top:90px;animation-delay:-.5s"></div>
@@ -334,7 +334,7 @@ function show(id){for(const s of document.querySelectorAll('.screen'))s.hidden=s
 let UID=0;
 const LINE='#3a2030',SKIN='#ffe6d5',SKIN_D='#f5c0ab';
 const CH={
-  mio:{hair:'#ff9cbc',hairD:'#d95a88',hairL:'#ffe3ee',eye:'#e2457e',eyeD:'#6e1440',eyeL:'#ffb0d0',style:'twin'},
+  misaki:{hair:'#ff9cbc',hairD:'#d95a88',hairL:'#ffe3ee',eye:'#e2457e',eyeD:'#6e1440',eyeL:'#ffb0d0',style:'twin'},
   touka:{hair:'#4a5cbc',hairD:'#26327a',hairL:'#b2c0ff',eye:'#2aa6d2',eyeD:'#0e3658',eyeL:'#a6eeff',style:'long',cool:true}
 };
 const EYE_SHAPE='M-21,-10 Q-2,-34 21,-15 Q23,22 0,26 Q-22,24 -21,-10 Z';
@@ -379,7 +379,7 @@ function blush(){
     for(let i=-1;i<=1;i++)s+=`<path d="M${x+i*8-3},256 l6,-8" stroke="#e0506e" stroke-width="1.6" stroke-linecap="round"/>`;}
   return s;
 }
-/** id: 'mio'|'touka', expr, vb: viewBox (クロップ用) */
+/** id: 'misaki'|'touka', expr, vb: viewBox (クロップ用) */
 function charSVG(id,expr='normal',vb='0 0 400 600',par='xMidYMax meet'){
   const c=CH[id],u=++UID,H=c.hair,HD=c.hairD;
   const mir=s=>`${s}<g transform="translate(400,0) scale(-1,1)">${s}</g>`;
@@ -619,17 +619,17 @@ const LSUNG=LYR.map(l=>{let d=0;l.m.forEach(([m,x])=>d+=x);const tail=l.m[l.m.le
 const FLASHES=[1.875,3.75,7.5,11.25,15,18.75,22.5,26.25];
 let op=null;
 function fillOP(){
-  $('opMio').innerHTML=charSVG('mio','smile');
-  $('opMioEye').innerHTML=charSVG('mio','normal','128 176 144 70','xMidYMid slice');
+  $('opMisaki').innerHTML=charSVG('misaki','smile');
+  $('opMisakiEye').innerHTML=charSVG('misaki','normal','128 176 144 70','xMidYMid slice');
   $('opRoof').innerHTML=bgRoof();
   $('opTouka').innerHTML=charSVG('touka','cool');
-  $('opMioFace').innerHTML=charSVG('mio','happy','92 50 216 260','xMidYMid slice');
+  $('opMisakiFace').innerHTML=charSVG('misaki','happy','92 50 216 260','xMidYMid slice');
   $('opToukaFace').innerHTML=charSVG('touka','blush','92 50 216 260','xMidYMid slice');
   $('opSlope').innerHTML=bgSlope('morning');
   $('opSunset').innerHTML=bgSlope('sunset');
-  $('opSilM').innerHTML=charSVG('mio','normal');
+  $('opSilM').innerHTML=charSVG('misaki','normal');
   $('opSilT').innerHTML=charSVG('touka','normal');
-  $('opMio2').innerHTML=charSVG('mio','happy');
+  $('opMisaki2').innerHTML=charSVG('misaki','happy');
   $('opTouka2').innerHTML=charSVG('touka','smile');
   $('opHill').innerHTML=silhouettes();
 }
@@ -688,7 +688,7 @@ $('bOP').onclick=e=>{e.stopPropagation();startOP();};
 $('title').addEventListener('click',()=>{});
 
 /* ================= 本編エンジン ================= */
-const NAMES={ミオ:'mio',冬華:'touka',ユウキ:'yuki'};
+const NAMES={ミサキ:'misaki',冬華:'touka',ユウキ:'yuki'};
 const POS={left:20,center:170,right:320};
 const SCRIPT=[
   {bg:'black'},
@@ -699,40 +699,40 @@ const SCRIPT=[
   {say:'ユウキ',text:'……変わってないな、ここは。'},
   {say:'？？？',text:'どいてどいてどいてーーっ！！'},
   {fx:'shake'},
-  {show:'mio',expr:'surprise',pos:'center'},
+  {show:'misaki',expr:'surprise',pos:'center'},
   {say:'？？？',text:'いったぁ～……。ご、ごめんなさいっ！　遅刻しそうで、前見てなくて……'},
   {say:'ユウキ',text:'いや、こっちこそ。……ん？　その黄色いリボン……'},
-  {show:'mio',expr:'normal'},
+  {show:'misaki',expr:'normal'},
   {say:'？？？',text:'え……？　あれ、もしかして……'},
-  {show:'mio',expr:'happy'},
-  {say:'？？？',text:'ユウくん!?　ユウくんだよね!?　わたし、ミオだよ！　朝比奈ミオ！'},
-  {narr:'朝比奈ミオ。家がとなりどうしで、毎日いっしょに遊んでいた幼なじみ。'},
+  {show:'misaki',expr:'happy'},
+  {say:'？？？',text:'ユウくん!?　ユウくんだよね!?　わたし、ミサキだよ！　朝比奈ミサキ！'},
+  {narr:'朝比奈ミサキ。家がとなりどうしで、毎日いっしょに遊んでいた幼なじみ。'},
   {narr:'七年前、引っ越しの日に泣きながら手をふっていた女の子が――'},
-  {show:'mio',expr:'blush'},
-  {say:'ミオ',text:'えへへ……おかえりなさい、ユウくん。ずーっと、待ってたんだから。'},
-  {say:'ユウキ',text:'ただいま、ミオ。……って、遅刻するんじゃなかったのか？'},
-  {show:'mio',expr:'surprise'},
-  {say:'ミオ',text:'あああっ！　そうだった！　ほら、ユウくんも走って！　始業式はじまっちゃう！'},
+  {show:'misaki',expr:'blush'},
+  {say:'ミサキ',text:'えへへ……おかえりなさい、ユウくん。ずーっと、待ってたんだから。'},
+  {say:'ユウキ',text:'ただいま、ミサキ。……って、遅刻するんじゃなかったのか？'},
+  {show:'misaki',expr:'surprise'},
+  {say:'ミサキ',text:'あああっ！　そうだった！　ほら、ユウくんも走って！　始業式はじまっちゃう！'},
   {hide:'all'},
   {bg:'classroom'},
   {narr:'――二年B組。転校生の自己紹介は、なんとか無事に終わった。'},
-  {show:'mio',expr:'smile',pos:'left'},
-  {say:'ミオ',text:'まさかユウくんと同じクラスなんて！　これって運命かも、なーんて♪'},
+  {show:'misaki',expr:'smile',pos:'left'},
+  {say:'ミサキ',text:'まさかユウくんと同じクラスなんて！　これって運命かも、なーんて♪'},
   {say:'？？？',text:'朝比奈さん。ホームルーム中よ、静かにして。'},
   {show:'touka',expr:'cool',pos:'right'},
-  {show:'mio',expr:'pout'},
-  {say:'ミオ',text:'うっ……ごめんなさい、委員長……'},
+  {show:'misaki',expr:'pout'},
+  {say:'ミサキ',text:'うっ……ごめんなさい、委員長……'},
   {say:'？？？',text:'あなたが転校生の相沢くんね。クラス委員長の綾瀬冬華です。'},
   {say:'冬華',text:'わからないことがあれば聞いて。……ただし、浮ついた話はお断りよ。'},
   {say:'ユウキ',text:'（クールな子だな……。でも、どこかで会ったような……？）'},
   {show:'touka',expr:'normal'},
   {say:'冬華',text:'……何？　人の顔をじっと見て。'},
   {say:'ユウキ',text:'あ、いや、なんでもない。よろしく、綾瀬さん。'},
-  {show:'mio',expr:'smile'},
-  {say:'ミオ',text:'ねえねえユウくん、知ってる？　この学校の「星降りの伝説」！'},
-  {say:'ミオ',text:'この夏、三十年ぶりの流星群がくるの。その夜、坂のてっぺんで想いを伝えると――'},
-  {show:'mio',expr:'blush'},
-  {say:'ミオ',text:'ふたりは、永遠に結ばれるんだって……♪'},
+  {show:'misaki',expr:'smile'},
+  {say:'ミサキ',text:'ねえねえユウくん、知ってる？　この学校の「星降りの伝説」！'},
+  {say:'ミサキ',text:'この夏、三十年ぶりの流星群がくるの。その夜、坂のてっぺんで想いを伝えると――'},
+  {show:'misaki',expr:'blush'},
+  {say:'ミサキ',text:'ふたりは、永遠に結ばれるんだって……♪'},
   {show:'touka',expr:'cool'},
   {say:'冬華',text:'……くだらない。ただの言い伝えよ。'},
   {narr:'そう言いながら、委員長は窓の外の空を、少しだけ長く見つめていた。'},
@@ -740,20 +740,20 @@ const SCRIPT=[
   {bg:'classroom_evening'},
   {narr:'――そして、放課後。'},
   {narr:'窓の外は、もう夕焼けに染まりはじめている。'},
-  {choice:[{text:'ミオといっしょに帰る',jump:'mio'},{text:'屋上へ行ってみる',jump:'touka'}]},
+  {choice:[{text:'ミサキといっしょに帰る',jump:'misaki'},{text:'屋上へ行ってみる',jump:'touka'}]},
 
-  {label:'mio'},
+  {label:'misaki'},
   {bg:'slope_sunset'},
-  {show:'mio',expr:'smile',pos:'center'},
-  {say:'ミオ',text:'こうしてふたりで坂をくだるの、七年ぶりだね。'},
-  {say:'ユウキ',text:'ミオ、昔はここで転んでよく泣いてたよな。'},
-  {show:'mio',expr:'pout'},
-  {say:'ミオ',text:'も、もう泣かないもん！　……ユウくんがいなくなったときは、いっぱい泣いたけど。'},
-  {show:'mio',expr:'blush'},
-  {say:'ミオ',text:'ねえ、ユウくん。夏の流星群……いっしょに見に行ってくれる？'},
+  {show:'misaki',expr:'smile',pos:'center'},
+  {say:'ミサキ',text:'こうしてふたりで坂をくだるの、七年ぶりだね。'},
+  {say:'ユウキ',text:'ミサキ、昔はここで転んでよく泣いてたよな。'},
+  {show:'misaki',expr:'pout'},
+  {say:'ミサキ',text:'も、もう泣かないもん！　……ユウくんがいなくなったときは、いっぱい泣いたけど。'},
+  {show:'misaki',expr:'blush'},
+  {say:'ミサキ',text:'ねえ、ユウくん。夏の流星群……いっしょに見に行ってくれる？'},
   {say:'ユウキ',text:'ああ。約束する。'},
-  {show:'mio',expr:'happy'},
-  {say:'ミオ',text:'ほんと!?　やったぁ！　約束だよ、ぜったいだからね！'},
+  {show:'misaki',expr:'happy'},
+  {say:'ミサキ',text:'ほんと!?　やったぁ！　約束だよ、ぜったいだからね！'},
   {jump:'end'},
 
   {label:'touka'},

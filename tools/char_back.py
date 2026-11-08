@@ -31,7 +31,7 @@ CHARS = {
     "touka": dict(
         p="1girl, solo, (very long hair:1.4), straight hair, (blue hair:1.5), (royal blue hair:1.5), (medium blue hair:1.2), "
           "white hairband, hair covering the back, " + UNIFORM,
-        seed=1),
+        seed=1, zoom=1.6),
 }
 NEG = ("lowres, bad anatomy, text, error, cropped, worst quality, low quality, jpeg artifacts, signature, "
        "watermark, blurry, 3d, photorealistic, chromatic aberration, glasses, eyewear, face, looking back, "
@@ -65,8 +65,10 @@ def install(char, seed=None, colors=48):
     im = PP.remove_white_bg(im, side_limit=0.62, bottom=False)
     bb = im.getbbox()
     im = im.crop(bb)
-    s = 450 / im.height          # 高さ 450 に揃え、幅が 300 を超える分は中央で切る
-    im = im.resize((round(im.width * s), 450), Image.LANCZOS)
+    # 高さ 450 に揃えた上で zoom 倍する（冬華は細身で小さく見えるので、ミサキの頭・肩の大きさに合わせる）。
+    # 上端揃え・左右中央で 300x450 に切る
+    s = 450 / im.height * CHARS[char].get("zoom", 1.0)
+    im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
     canvas = Image.new("RGBA", (300, 450), (0, 0, 0, 0))
     canvas.alpha_composite(im, ((300 - im.width) // 2, 0))
     a = canvas.getchannel("A")

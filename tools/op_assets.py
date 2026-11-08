@@ -50,10 +50,18 @@ def backgrounds():
 
 
 def misaki():
-    for expr in ("smile", "blush", "surprise"):
-        src = Image.open(os.path.join(BUSTS, f"bust_{expr}.png")).convert("RGBA")
-        save(reduce_colors(src.resize((300, 450), Image.LANCZOS), 48, True), f"chars/misaki_{expr}.png")
-        save(reduce_colors(src, 64, True), f"chars/misaki_{expr}_hi.png")
+    """美咲（OP 用表情）。本編と同じ layeredimage のパーツ差分（tools/misaki_parts.py）を合成して減色する。"""
+    from tools import misaki_parts as P
+    src = os.path.join(ROOT, "hoshimizaka", "game", "images", "chars", "misaki")
+    poses = {
+        "smile": ("open", "smile", "normal", False),
+        "blush": ("open", "smile", "normal", True),
+        "surprise": ("surprise", "surprise", "up", False),
+    }
+    for name, (e, m, b, bl) in poses.items():
+        big = P.compose(src, e, m, b, bl)
+        save(reduce_colors(big.resize((300, 450), Image.LANCZOS), 48, True), f"chars/misaki_{name}.png")
+        save(reduce_colors(big, 64, True), f"chars/misaki_{name}_hi.png")
 
 
 def touka():

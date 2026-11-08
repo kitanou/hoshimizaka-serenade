@@ -607,4 +607,5 @@ layeredimage misaki:
 - **後ろ姿**（OP CUT 10 / 12）: `tools/char_back.py` で生成し、300×450・48 色・ordered dither の透過 PNG にした（`images/op/chars/{misaki,touka}_back.png`）。
 - **OP の冬華表情**: `tools/op_assets.py` の `touka()` が新パーツを合成して作る。旧 SVG からの後ろ姿生成（`backs()`）は廃止。
 - **楓**は旧画風のまま（別作業）。
+- **サイズ合わせ**: 冬華は最初、ミサキより顔が約 0.6 倍の大きさだった（目の幅 256px 対 416px）。ミサキに合わせ、冬華の窓を 1.625 倍に拡大して目の位置も合わせて作り直した（`misaki_parts.py` の `fit`）。後ろ姿の冬華は 1.6 倍（`char_back.py` の `zoom`）。OP の表情（ミサキ・冬華とも）は本編と同じパーツ合成から作る。
 

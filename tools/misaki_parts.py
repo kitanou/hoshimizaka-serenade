@@ -81,7 +81,9 @@ CONFIGS = {
         regions={"brows": ((310, 262, 592, 312), 6), "eyes": ((305, 298, 600, 398), 10),
                  "mouth": ((408, 412, 502, 472), 8)},
         cheeks=[(325, 385, 400, 418), (505, 385, 580, 415)],
-        lash_zones=[], sheet_crop=(60, 100, 540, 460),
+        lash_zones=[], sheet_crop=(60, 260, 540, 620),
+        # ミサキの顔（目の幅 416px・目の中心 (278,412)）に合わせる。現状の冬華は目の幅 256px・中心 (304,266)
+        fit=dict(zoom=416 / 256, eye_from=(304, 266), eye_to=(278, 412)),
         # 冬華は前髪が眉に被るので、眉は弱め・目の pout は上まぶたを落とし過ぎない（帯状の破綻を防ぐ）
         tags={("eyes", "pout"): "(jitome:1.2), (glaring:1.2), annoyed, sharp eyes",
               ("brows", "up"): "(raised eyebrows:1.2), surprised"},
@@ -94,13 +96,14 @@ NEGATIVE = None
 BASE_SRC = None      # 設定時はこの画像を基準として使い、ComfyUI で基準を作らない
 PALE_FRINGE = True   # 参考シートの印刷オフセット（薄青いフチ）を白扱いにする（美咲のみ）
 CHEEK_RGB = (236, 110, 130)
+FIT = None                          # キャラ間のサイズ合わせ（use() が設定）
 SHEET_CROP = (60, 260, 540, 620)   # 確認シートで切り出す顔まわり（600x900 キャンバス上）
 
 
 def use(char):
     """キャラ設定をモジュール定数へ反映する。"""
     global WORK, GAME_DIR, CHAR_NAME, POSITIVE, NEGATIVE, BASE_SRC, PALE_FRINGE, CHEEK_RGB
-    global LENS_L, LENS_R, REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP
+    global LENS_L, LENS_R, REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP, FIT
     c = CONFIGS[char]
     CHAR_NAME = char
     if not c:
@@ -112,6 +115,7 @@ def use(char):
     if c["lens"] is None:
         LENS_L = LENS_R = None
     REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP = c["regions"], c["cheeks"], c["lash_zones"], c["sheet_crop"]
+    FIT = c.get("fit")
     for (part, kind), t in c.get("tags", {}).items():
         TAGS[part][kind] = t
     for (part, kind), d in c.get("denoise", {}).items():
@@ -256,6 +260,19 @@ class Raster:
         self.bbox = self.alpha_full.getbbox()
         bw, bh = self.bbox[2] - self.bbox[0], self.bbox[3] - self.bbox[1]
         self.size = (round(bw * PP.TARGET_H["bust"] / bh), PP.TARGET_H["bust"])
+        if FIT:
+            # 顔の大きさ・位置を別キャラ（ミサキ）に合わせる。bbox を「FIT["zoom"] 倍に拡大した窓」に置き換える。
+            # eye_from: 現状の 600x900 キャンバス上の目の中心、eye_to: 合わせたい位置
+            x0, y0, x1, y1 = self.bbox
+            s0 = 450 / (y1 - y0)                       # 現状: 元画像 1px = 画面 s0 px
+            sn = s0 * FIT["zoom"]
+            off = (600 - 2 * self.size[0]) / 2          # 現状は 600 幅キャンバスに中央寄せで置かれていた
+            ex = x0 + (FIT["eye_from"][0] - off) / 2 / s0
+            ey = y0 + FIT["eye_from"][1] / 2 / s0
+            ox = ex - FIT["eye_to"][0] / 2 / sn
+            oy = ey - FIT["eye_to"][1] / 2 / sn
+            self.bbox = (round(ox), round(oy), round(ox + 300 / sn), round(oy + 450 / sn))
+            self.size = (300, 450)
         small = self._small(base)
         self.palette = small.quantize(colors=colors, method=Image.Quantize.MEDIANCUT,
                                       dither=Image.Dither.NONE)
@@ -263,7 +280,13 @@ class Raster:
         self.alpha = np.asarray(self._small_l(self.alpha_full)) >= 128
 
     def _small(self, im):
-        return im.convert("RGB").crop(self.bbox).resize(self.size, Image.LANCZOS)
+        im = im.convert("RGB")
+        if FIT:  # 窓が元画像の外に出ても黒を混ぜない
+            c = Image.new("RGB", (im.width + 2000, im.height + 2000), (255, 255, 255))
+            c.paste(im, (1000, 1000))
+            b = self.bbox
+            return c.crop((b[0] + 1000, b[1] + 1000, b[2] + 1000, b[3] + 1000)).resize(self.size, Image.LANCZOS)
+        return im.crop(self.bbox).resize(self.size, Image.LANCZOS)
 
     def _small_l(self, m):
         return m.crop(self.bbox).resize(self.size, Image.LANCZOS)

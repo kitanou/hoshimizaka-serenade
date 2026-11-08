@@ -70,8 +70,11 @@ TOUKA_NEG = ("lowres, bad anatomy, bad hands, text, error, cropped, worst qualit
              "pink hair, blonde hair, short hair, twintails, ponytail, high contrast, heavy shadow, thick outlines, "
              "light blue collar, multiple girls, speech bubble, nsfw, sparkle eyes, star pupils")
 
+SHRINK = 0.78   # 頭・髪が切れないよう、両キャラを同じ比率で縮める（ミサキを基準に顔の大きさは 2 人でそろえたまま）
+PAD = (160, 130)  # アウトペイントで描き足す余白（左右 px, 上 py）。下は足さない（バストの下端は切れてよい）
+
 CONFIGS = {
-    "misaki": {},
+    "misaki": dict(fit=dict(shrink=SHRINK), sheet_crop=(30, 250, 570, 640)),
     "touka": dict(
         work="parts_touka", game="touka",
         base_src="output/touka/base.png",          # 基準バスト（tools/misaki_parts の docs 参照）
@@ -81,9 +84,9 @@ CONFIGS = {
         regions={"brows": ((310, 262, 592, 312), 6), "eyes": ((305, 298, 600, 398), 10),
                  "mouth": ((408, 412, 502, 472), 8)},
         cheeks=[(325, 385, 400, 418), (505, 385, 580, 415)],
-        lash_zones=[], sheet_crop=(60, 260, 540, 620),
+        lash_zones=[], sheet_crop=(30, 250, 570, 640),
         # ミサキの顔（目の幅 416px・目の中心 (278,412)）に合わせる。現状の冬華は目の幅 256px・中心 (304,266)
-        fit=dict(zoom=416 / 256, eye_from=(304, 266), eye_to=(278, 412)),
+        fit=dict(zoom=416 / 256, eye_from=(304, 266), eye_to=(278, 412), shrink=SHRINK),
         # 冬華は前髪が眉に被るので、眉は弱め・目の pout は上まぶたを落とし過ぎない（帯状の破綻を防ぐ）
         tags={("eyes", "pout"): "(jitome:1.2), (glaring:1.2), annoyed, sharp eyes",
               ("brows", "up"): "(raised eyebrows:1.2), surprised"},
@@ -106,7 +109,8 @@ def use(char):
     global LENS_L, LENS_R, REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP, FIT
     c = CONFIGS[char]
     CHAR_NAME = char
-    if not c:
+    FIT, SHEET_CROP = c.get("fit"), c["sheet_crop"]
+    if "work" not in c:   # 美咲: 既定値のまま（FIT / SHEET_CROP だけ上で設定）
         return
     WORK = os.path.join(ROOT, "output", c["work"])
     GAME_DIR = os.path.join(ROOT, "hoshimizaka", "game", "images", "chars", c["game"])
@@ -260,27 +264,56 @@ class Raster:
         self.bbox = self.alpha_full.getbbox()
         bw, bh = self.bbox[2] - self.bbox[0], self.bbox[3] - self.bbox[1]
         self.size = (round(bw * PP.TARGET_H["bust"] / bh), PP.TARGET_H["bust"])
+        self.ext, self.pad = None, (0, 0)
         if FIT:
-            # 顔の大きさ・位置を別キャラ（ミサキ）に合わせる。bbox を「FIT["zoom"] 倍に拡大した窓」に置き換える。
-            # eye_from: 現状の 600x900 キャンバス上の目の中心、eye_to: 合わせたい位置
+            # bbox を「元画像上の窓」に置き換える（窓は 300x450 の画面に拡大される）。
+            # zoom/eye_*: 顔の大きさ・位置を別キャラ（ミサキ）に合わせる。shrink: 窓を 1/shrink 倍に広げて
+            #   下端・左右中央を保ったまま全体を縮める（頭・髪が切れないようにする）
             x0, y0, x1, y1 = self.bbox
             s0 = 450 / (y1 - y0)                       # 現状: 元画像 1px = 画面 s0 px
-            sn = s0 * FIT["zoom"]
             off = (600 - 2 * self.size[0]) / 2          # 現状は 600 幅キャンバスに中央寄せで置かれていた
-            ex = x0 + (FIT["eye_from"][0] - off) / 2 / s0
-            ey = y0 + FIT["eye_from"][1] / 2 / s0
-            ox = ex - FIT["eye_to"][0] / 2 / sn
-            oy = ey - FIT["eye_to"][1] / 2 / sn
-            self.bbox = (round(ox), round(oy), round(ox + 300 / sn), round(oy + 450 / sn))
+            if "zoom" in FIT:
+                sn = s0 * FIT["zoom"]
+                ex = x0 + (FIT["eye_from"][0] - off) / 2 / s0
+                ey = y0 + FIT["eye_from"][1] / 2 / s0
+                ox = ex - FIT["eye_to"][0] / 2 / sn
+                oy = ey - FIT["eye_to"][1] / 2 / sn
+                ww, hh = 300 / sn, 450 / sn
+            else:
+                sn, ww, hh = s0, 300 / s0, y1 - y0
+                ox, oy = (x0 + x1) / 2 - ww / 2, y0
+            k = FIT.get("shrink", 1.0)
+            cx, bottom = ox + ww / 2, oy + hh
+            ww, hh = ww / k, hh / k
+            ox, oy = cx - ww / 2, bottom - hh
+            self.bbox = (round(ox), round(oy), round(ox + ww), round(oy + hh))
             self.size = (300, 450)
+            ext_path = os.path.join(WORK, "ext_base.png")
+            if os.path.exists(ext_path):   # アウトペイントで外側を描き足した基準（tools.misaki_parts extend）
+                self.ext, self.pad = Image.open(ext_path).convert("RGB"), PAD
+                self.bbox = (self.bbox[0] + PAD[0], self.bbox[1] + PAD[1], self.bbox[2] + PAD[0], self.bbox[3] + PAD[1])
+                e = np.asarray(self.ext).copy()
+                if PALE_FRINGE:
+                    ci = e.astype(int)
+                    pale = (ci.min(axis=2) >= 150) & (ci[..., 2] >= ci[..., 0] + 12) & (ci.max(axis=2) - ci.min(axis=2) < 100)
+                    e[pale] = 255
+                af = PP.remove_white_bg(Image.fromarray(e), side_limit=0.62, bottom=False).getchannel("A")
+                # アウトペイントが余白に出した孤立した断片（髪の切れ端など）を除く
+                from tools.import_misaki import largest_component
+                keep = largest_component(np.asarray(af) > 0)
+                self.alpha_full = Image.fromarray(np.where(keep, np.asarray(af), 0).astype(np.uint8))
         small = self._small(base)
         self.palette = small.quantize(colors=colors, method=Image.Quantize.MEDIANCUT,
                                       dither=Image.Dither.NONE)
         self.colors = colors
-        self.alpha = np.asarray(self._small_l(self.alpha_full)) >= 128
+        self.alpha = np.asarray(self._small_l(self.alpha_full, ext_frame=True)) >= 128
 
     def _small(self, im):
         im = im.convert("RGB")
+        if self.ext is not None:
+            c = self.ext.copy()
+            c.paste(im, self.pad)
+            im = c
         if FIT:  # 窓が元画像の外に出ても黒を混ぜない
             c = Image.new("RGB", (im.width + 2000, im.height + 2000), (255, 255, 255))
             c.paste(im, (1000, 1000))
@@ -288,7 +321,11 @@ class Raster:
             return c.crop((b[0] + 1000, b[1] + 1000, b[2] + 1000, b[3] + 1000)).resize(self.size, Image.LANCZOS)
         return im.crop(self.bbox).resize(self.size, Image.LANCZOS)
 
-    def _small_l(self, m):
+    def _small_l(self, m, ext_frame=False):
+        if self.ext is not None and not ext_frame:   # 元画像座標のマスクを、拡張後の座標へ置く
+            c = Image.new("L", self.ext.size, 0)
+            c.paste(m, self.pad)
+            m = c
         return m.crop(self.bbox).resize(self.size, Image.LANCZOS)
 
     def rgb(self, im):
@@ -394,9 +431,48 @@ def sheet(dest=GAME_DIR):
     print("wrote", path)
 
 
+def extend():
+    """基準バストの上・左右を ComfyUI でアウトペイントして WORK/ext_base.png を作る（髪・肩が切れないように）。"""
+    base = Image.open(_gen_path("base")).convert("RGB")
+    px, py = PAD
+    # 余白は端の画素を引き延ばして埋める（白だと「何も描かない」と解釈されて髪・肩が続かない）。
+    # 背景（白）に接する上の余白は白のまま
+    arr = np.pad(np.asarray(base), ((py, 0), (px, px), (0, 0)), mode="edge")
+    arr[:py] = 255
+    ext = Image.fromarray(arr)
+    mask = Image.new("L", ext.size, 255)
+    ImageDraw.Draw(mask).rectangle((px + 14, py + 14, px + base.width - 15, ext.height), fill=0)  # 元画像の内側 14px は描き直す
+    mask = mask.filter(ImageFilter.GaussianBlur(6))
+    inp = os.path.join(G.COMFY, "input")
+    ext.save(os.path.join(inp, f"ms_{CHAR_NAME}_ext_init.png"))
+    mask.save(os.path.join(inp, f"ms_{CHAR_NAME}_ext_mask.png"))
+    kw = dict(positive=POSITIVE(""), ip_weight=0.0) if POSITIVE else {}
+    G.run(_args(preset="expr", init=f"ms_{CHAR_NAME}_ext_init.png", mask=f"ms_{CHAR_NAME}_ext_mask.png",
+                refine=0.0, denoise=0.9, tags="", name="ext", negative=NEGATIVE or G.NEG, seed=SEED,
+                out=os.path.relpath(WORK, ROOT), **kw))
+    out = Image.open(os.path.join(WORK, "expr", f"ext_s{SEED}.png")).convert("RGB")
+    # 2 回目: 下側（肩・袖）の左右の余白だけ、制服の続きを描き足す
+    y0 = py + int(base.height * 0.55)
+    m2 = Image.new("L", out.size, 0)
+    ImageDraw.Draw(m2).rectangle((0, y0, px + 20, out.height), fill=255)
+    ImageDraw.Draw(m2).rectangle((px + base.width - 20, y0, out.width, out.height), fill=255)
+    m2 = m2.filter(ImageFilter.GaussianBlur(8))
+    out.paste(base, (px, py))
+    out.save(os.path.join(inp, f"ms_{CHAR_NAME}_ext_init2.png"))
+    m2.save(os.path.join(inp, f"ms_{CHAR_NAME}_ext_mask2.png"))
+    shoulder = "(sailor uniform:1.3), (white short sleeve shirt:1.3), shoulder, upper arm, torso, no hair"
+    G.run(_args(preset="expr", init=f"ms_{CHAR_NAME}_ext_init2.png", mask=f"ms_{CHAR_NAME}_ext_mask2.png",
+                refine=0.0, denoise=0.95, tags=shoulder, name="ext2", negative=NEGATIVE or G.NEG, seed=SEED,
+                out=os.path.relpath(WORK, ROOT), **kw))
+    out = Image.open(os.path.join(WORK, "expr", f"ext2_s{SEED}.png")).convert("RGB")
+    out.paste(base, (px, py))        # 元画像の範囲は元のまま（アウトペイントは外側だけ使う）
+    out.save(os.path.join(WORK, "ext_base.png"))
+    print("wrote", os.path.join(WORK, "ext_base.png"), out.size)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("cmd", choices=["gen", "build", "sheet", "masks"])
+    p.add_argument("cmd", choices=["gen", "extend", "build", "sheet", "masks"])
     p.add_argument("--char", choices=list(CONFIGS), default="misaki")
     p.add_argument("--dest", default=None, help="既定: そのキャラの images/chars/<char>/")
     p.add_argument("--colors", type=int, default=64)
@@ -417,6 +493,8 @@ def main():
         os.makedirs(WORK, exist_ok=True)
         over.save(os.path.join(WORK, "masks.png"))
         print("wrote", os.path.join(WORK, "masks.png"))
+    elif a.cmd == "extend":
+        extend()
     elif a.cmd == "build":
         build(a.dest, a.colors)
     else:

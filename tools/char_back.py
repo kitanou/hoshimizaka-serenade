@@ -18,6 +18,7 @@ from tools import misaki_postprocess as PP
 
 ROOT = G.ROOT
 OUT = os.path.join(ROOT, "hoshimizaka", "game", "images", "op", "chars")
+TOP_MARGIN = 16
 STYLE = ("retro artstyle, 1990s (style), official art, game cg, cel shading, soft shading, "
          "thin dark lineart, delicate lineart, soft colors")
 FRAME = ("(from behind:1.5), (back view:1.4), (facing away:1.4), (back of head:1.3), upper body, "
@@ -31,7 +32,7 @@ CHARS = {
     "touka": dict(
         p="1girl, solo, (very long hair:1.4), straight hair, (blue hair:1.5), (royal blue hair:1.5), (medium blue hair:1.2), "
           "white hairband, hair covering the back, " + UNIFORM,
-        seed=1, zoom=1.6),
+        seed=1, zoom=1.5),
 }
 NEG = ("lowres, bad anatomy, text, error, cropped, worst quality, low quality, jpeg artifacts, signature, "
        "watermark, blurry, 3d, photorealistic, chromatic aberration, glasses, eyewear, face, looking back, "
@@ -70,7 +71,7 @@ def install(char, seed=None, colors=48):
     s = 450 / im.height * CHARS[char].get("zoom", 1.0)
     im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
     canvas = Image.new("RGBA", (300, 450), (0, 0, 0, 0))
-    canvas.alpha_composite(im, ((300 - im.width) // 2, 0))
+    canvas.alpha_composite(im, ((300 - im.width) // 2, TOP_MARGIN))   # 頭頂が端に触れないよう少し下げる
     a = canvas.getchannel("A")
     rgb = PP._quantize(canvas.convert("RGB"), colors, "ordered")
     out = rgb.convert("RGBA")

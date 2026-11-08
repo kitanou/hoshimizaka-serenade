@@ -314,8 +314,10 @@ def gen_ui_parts():
 def main():
     only = set(sys.argv[1:])
     steps = dict(bg=gen_backgrounds, chars=gen_sprites, cg=gen_cg, fx=gen_fx, op=gen_op_art, ui=gen_ui, parts=gen_ui_parts)
+    # 背景（bg）は ComfyUI 生成（tools/bg_gen.py, docs/background-art-spec.md）に移行したので、
+    # 引数なしの一括実行では作り直さない（旧ベクター調で上書きしてしまうため）。明示 `bg` 指定のみ。
     for k, fn in steps.items():
-        if not only or k in only:
+        if k in only or (not only and k != "bg"):
             fn()
 
 

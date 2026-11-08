@@ -590,3 +590,14 @@ layeredimage misaki:
 - **まばたき**: 他の2人と同じ `misaki_eyes_open`（`eyes_open` ↔ `eyes_closed`）。
 - `images.rpy` のミサキの1枚絵宣言はやめ、`gen_rpy` で他の2人と同じ layeredimage を出力する。表情プリセットは `characters.rpy` の `_BASE` で4グループに展開する（`config.adjust_attributes["misaki"]`）。
 - 表情ごとの1枚絵 `bust_*.png` は CG 生成（`tools/gen_images.py`）が使うので残す。
+
+### 14.7 背景の作り直し（Issue #67）
+
+本編背景 11 枚（`black` を除く）と OP 背景 6 枚を、ComfyUI で作り直した（旧はベクター調／320×240 の角ドット）。仕様・プロンプト・採用判断は `docs/background-art-spec.md`。
+
+- 納品は 1280×960 PNG（640×480 で 96 色・Bayer 4×4 ディザ → 2 倍 Nearest）。ファイル名・`images.rpy` の宣言は変更なし。
+- OP 背景は 320×240 から 1280×960 になったため、`op.rpy` の宣言を `zoom=2, nearest=True` → `zoom=0.5` に変更（演出の変換は 640×480 換算で同じ）。
+- 流れ星・花びらは背景に焼き込まず fx に任せる（`night.png` の流星は削除）。
+- `bg_op_meteor_shower` / `bg_op_railway_crossing` / `bg_op_telescope_sky` は引き続き作らない。
+- `tools.gen_images`（引数なし）と `tools.op_assets` は背景を作り直さない（旧素材で上書きしないため）。
+

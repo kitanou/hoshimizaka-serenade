@@ -172,7 +172,9 @@ def build_workflow(a):
     clip = w.add("CLIPSetLastLayer", clip=WF.out(ckpt, 1), stop_at_clip_layer=-2)
 
     expr = a.tags or EXPRESSIONS[a.expression or "normal"]
-    if a.preset == "expr":
+    if a.positive:  # 背景など、キャラ用ブロックを使わず全文を指定する場合（tools/bg_gen.py）
+        pos_txt = a.positive
+    elif a.preset == "expr":
         pos_txt = ", ".join([QUALITY, STYLE, CHAR, FRAMING_BUST, expr])
     else:
         pos_txt = ", ".join([QUALITY, STYLE, CHAR, FRAMING_STAND, expr])
@@ -212,6 +214,14 @@ def build_workflow(a):
         edges = w.add("Canny", image=init, low_threshold=0.15, high_threshold=0.4)
         p, n = controlnet(pos, neg, edges, "canny/lineart/anime_lineart/mlsd", a.cn_weight, a.cn_end)
         out = sample(model, p, n, latent, a.denoise)
+    elif a.preset == "bg":
+        # 背景: 空のラテントから生成（初期画像の色・塗りは引き継がない）。構図ガイドは任意で弱い canny
+        latent = w.add("EmptyLatentImage", width=a.width or 1152, height=a.height or 864, batch_size=1)
+        p, n = pos, neg
+        if a.init and a.cn_weight > 0:
+            edges = w.add("Canny", image=w.add("LoadImage", image=a.init), low_threshold=0.15, high_threshold=0.4)
+            p, n = controlnet(pos, neg, edges, "canny/lineart/anime_lineart/mlsd", a.cn_weight, a.cn_end)
+        out = sample(model, p, n, latent, 1.0)
     elif a.preset == "expr":
         init = w.add("LoadImage", image=a.init or IN_BUST)
         mask = w.add("LoadImageMask", image=a.mask or IN_BUST_MASK, channel="red")
@@ -313,7 +323,7 @@ def run(a):
 
 
 def add_gen_args(g):
-    g.add_argument("--preset", choices=["stand", "expr", "pose"], default="stand")
+    g.add_argument("--preset", choices=["stand", "expr", "pose", "bg"], default="stand")
     g.add_argument("--expression", choices=list(EXPRESSIONS), default=None)
     g.add_argument("--init", default=None, help="初期画像（ComfyUI/input 内）。既定は prep の参照")
     g.add_argument("--mask", default=None, help="expr: 顔マスク（ComfyUI/input 内）")
@@ -323,15 +333,29 @@ def add_gen_args(g):
     g.add_argument("--ip-weight", type=float, default=0.6)
     g.add_argument("--cn-weight", type=float, default=0.6)
     g.add_argument("--cn-end", type=float, default=0.8)
+    g.add_argument("--width", type=int, default=None, help="bg: 生成幅（既定 1152）")
+    g.add_argument("--height", type=int, default=None, help="bg: 生成高さ（既定 864）")
     g.add_argument("--steps", type=int, default=28)
     g.add_argument("--cfg", type=float, default=6.0)
     g.add_argument("--sampler", default="euler_ancestral")
     g.add_argument("--scheduler", default="normal")
     g.add_argument("--seed", type=int, default=5)
     g.add_argument("--negative", default=None)
+    g.add_argument("--positive", default=None, help="Positive プロンプト全文（指定時はキャラ用ブロックを使わない）")
     g.add_argument("--tags", default=None, help="表情タグを直接指定（パーツ差分用。--expression より優先）")
     g.add_argument("--name", default=None, help="出力ファイル名の接頭辞（既定: preset_expression）")
     g.add_argument("--out", default="output/comfy")
+
+
+def make_args(**kw):
+    """他スクリプトから run() を呼ぶための引数オブジェクト（既定値は gen サブコマンドと同じ）。"""
+    p = argparse.ArgumentParser()
+    add_gen_args(p)
+    a = p.parse_args([])
+    a.cmd = "gen"
+    for k, v in kw.items():
+        setattr(a, k, v)
+    return a
 
 
 def main():

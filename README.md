@@ -2,7 +2,9 @@
 
 90年代PC-98/サターン期の美少女ノベルゲーム風ゲーム。Ren'Py 8.x（Python）で作る体験版（ver.0.97）。
 
-- 設計書: [docs/demo-design.md](docs/demo-design.md)
+- 設計書: [docs/demo-design.md](docs/demo-design.md)（体験版 ver.0.97 の詳細設計）
+- 製品版仕様ドラフト: [docs/story-bible.md](docs/story-bible.md)（設定集） / [docs/route-flow.md](docs/route-flow.md)（分岐・ルート・TRUE END 条件案）
+- OP 絵コンテ: [docs/op-storyboard.md](docs/op-storyboard.md)
 - `prototype/index.html` … ブラウザで動く最初のプロトタイプ（ver.0.96。OP・脚本・配色の仕様元）
 - `hoshimizaka/` … Ren'Py プロジェクト（本体）
 - `tools/` … 画像・音の生成ツール（Python）

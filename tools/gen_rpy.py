@@ -48,22 +48,6 @@ def blink(cid):
 '''
 
 
-## ミサキは参考画像（docs/images/character-misaki.webp）から切り出した 6 表情のバストアップ。
-## 差分レイヤーは無いので、表情名ごとに 1 枚の画像を割り当てる（tools/import_misaki.py）。
-MISAKI_FILES = {"normal": "normal", "smile": "smile", "blush": "blush", "surprise": "surprise",
-                "sad": "sad", "angry": "angry"}
-MISAKI_ALIAS = {"happy": "smile", "pout": "angry", "closed": "blush", "cool": "normal"}
-
-
-def misaki_images():
-    L = []
-    for expr, f in MISAKI_FILES.items():
-        L.append(f'image misaki {expr} = At("images/chars/misaki/bust_{f}.png", char_zoom)')
-    for expr, f in MISAKI_ALIAS.items():
-        L.append(f'image misaki {expr} = At("images/chars/misaki/bust_{MISAKI_FILES[f]}.png", char_zoom)')
-    return "\n".join(L) + "\n"
-
-
 def main():
     out = ["## 自動生成: python -m tools.gen_rpy  （手で編集しない）", "",
            "## ---- 背景 (1280x960 の画像を 0.5 倍で 640x480 に) ----"]
@@ -73,10 +57,9 @@ def main():
     for name in ("misaki_end", "touka_end", "normal_end"):
         out.append(f'image cg {name} = Transform("images/cg/{name}.png", zoom=0.5)')
     out += ["", "## ---- 立ち絵 ----", ""]
-    out += [misaki_images()]
+    # ミサキのパーツは参考画像から ComfyUI で生成（tools/misaki_parts.py）。宣言の形は他の 2 人と同じ
     for cid in C.CH:
-        if cid != "misaki":
-            out += [blink(cid), layered(cid)]
+        out += [blink(cid), layered(cid)]
     open(os.path.join(GAME, "images.rpy"), "w", encoding="utf-8").write("\n".join(out) + "\n")
     print("images.rpy")
 

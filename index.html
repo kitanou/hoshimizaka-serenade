@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>星見坂セレナーデ</title>
+<style>
+/* 640x480 の固定ステージを画面に合わせて拡大。PC-98/サターン期の美少女ノベル風。単一テーマ(夜色)で固定 */
+:root{
+  --ink:#05061a;          /* 画面外の黒 */
+  --night:#101a4a;        /* 夜空 */
+  --pink:#ff5fa2;         /* ヒロインのピンク */
+  --cyan:#7fe3ff;         /* 冬華の水色 */
+  --gold:#ffe27a;         /* 星 */
+  --win:rgba(16,20,64,.86);
+  --line:#cfe0ff;
+  --font-ui:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo","MS PGothic",sans-serif;
+  --font-pop:"Hiragino Maru Gothic ProN","Arial Rounded MT Bold","Yu Gothic","Meiryo",sans-serif;
+  --font-dot:"Osaka-Mono","MS Gothic","Menlo",monospace;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:var(--ink);overflow:hidden}
+body{color:#fff;font-family:var(--font-ui);-webkit-user-select:none;user-select:none}
+#stage{position:absolute;left:50%;top:50%;width:640px;height:480px;transform-origin:50% 50%;
+  transform:translate(-50%,-50%);overflow:hidden;background:#000;box-shadow:0 0 60px rgba(80,120,255,.25)}
+.screen{position:absolute;inset:0}
+.screen[hidden]{display:none!important}
+/* CRT 走査線 + PC-98 風ディザ */
+#crt{position:absolute;inset:0;pointer-events:none;z-index:50;
+  background:
+    repeating-linear-gradient(rgba(0,0,0,.20) 0 1px,transparent 1px 3px),
+    radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.45) 100%)}
+#dither{position:absolute;inset:0;pointer-events:none;z-index:49;opacity:.07;
+  background:repeating-conic-gradient(#000 0 25%,transparent 0 50%) 0 0/2px 2px}
+button{font-family:inherit}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ---------- 起動画面 ---------- */
+#boot{background:#000;font-family:var(--font-dot);color:#9fffb0;padding:28px 34px;box-sizing:border-box;font-size:15px;line-height:1.7;cursor:pointer}
+#boot .dim{color:#5fa070}
+#boot .start{position:absolute;left:0;right:0;bottom:120px;text-align:center;color:#fff;font-size:22px;letter-spacing:.2em;animation:blink 1s steps(2) infinite}
+#boot .note{position:absolute;left:0;right:0;bottom:80px;text-align:center;color:#8a8fb0;font-size:13px}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- OP ---------- */
+#op{background:#000}
+#stars{position:absolute;inset:0;width:640px;height:480px}
+.cut{position:absolute;inset:0;display:none;overflow:hidden}
+.cut.on{display:block}
+#skip{position:absolute;right:12px;top:10px;z-index:40;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.6);
+  font-size:13px;padding:4px 12px;border-radius:3px;cursor:pointer;letter-spacing:.1em}
+#skip:hover{background:var(--pink)}
+#optime{position:absolute;left:12px;top:12px;z-index:40;font:12px var(--font-dot);color:rgba(255,255,255,.55)}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:30}
+#flash.go{animation:flash .45s ease-out}
+@keyframes flash{0%{opacity:.95}100%{opacity:0}}
+#whiteout{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:31}
+
+.presents{position:absolute;top:210px;width:100%;text-align:center;color:#cfd8ff;font-size:18px;letter-spacing:.5em;animation:fio 1.875s both}
+.presents small{display:block;font-size:11px;letter-spacing:.3em;color:#8890c0;margin-top:8px}
+@keyframes fio{0%{opacity:0;filter:blur(4px)}30%,70%{opacity:1;filter:none}100%{opacity:0}}
+.meteor{position:absolute;width:360px;height:4px;border-radius:4px;background:linear-gradient(90deg,#fff,rgba(255,240,180,.7) 20%,transparent);
+  box-shadow:0 0 12px #fff;transform-origin:0 50%;transform:rotate(152deg);animation:meteor 1.5s ease-in both}
+@keyframes meteor{0%{left:700px;top:-40px;opacity:0}15%{opacity:1}100%{left:120px;top:320px;opacity:0}}
+.op-credit{position:absolute;left:24px;top:40px;font-size:13px;letter-spacing:.15em;color:#ffe9a8;text-shadow:0 0 6px #ff5fa2;animation:slideR .6s .4s both}
+@keyframes slideR{from{transform:translateX(-30px);opacity:0}}
+
+.logo{position:absolute;left:0;right:0;top:130px;text-align:center}
+.logo .jp{display:inline-block;font:900 62px/1.1 var(--font-pop);letter-spacing:.02em;
+  background:linear-gradient(#fff 8%,#ffe1f0 35%,#ff5fa2 58%,#ffb35f 78%,#ffe97a 95%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(2px 0 0 #2a0f5c) drop-shadow(-2px 0 0 #2a0f5c) drop-shadow(0 2px 0 #2a0f5c) drop-shadow(0 -2px 0 #2a0f5c) drop-shadow(5px 5px 0 #ff2f86)}
+.logo .jp .s{font-size:42px}
+.logo .en{display:block;margin-top:6px;font:italic 700 20px/1 Georgia,"Times New Roman",serif;letter-spacing:.45em;color:var(--cyan);text-shadow:0 0 8px #2a6aff,2px 2px 0 #1a1050}
+.logo .tag{display:inline-block;margin-top:14px;font-size:12px;letter-spacing:.3em;color:#fff;background:var(--pink);padding:3px 10px;transform:skewX(-12deg)}
+.cut.on .logo.slam .jp{animation:slam .55s cubic-bezier(.2,1.6,.4,1) both}
+.cut.on .logo.slam .en{animation:slideR .5s .35s both}
+.cut.on .logo.slam .tag{animation:pop .4s .6s both}
+@keyframes slam{0%{transform:scale(3.2);opacity:0}60%{transform:scale(.92);opacity:1}100%{transform:scale(1)}}
+@keyframes pop{0%{transform:skewX(-12deg) scale(0)}80%{transform:skewX(-12deg) scale(1.2)}100%{transform:skewX(-12deg) scale(1)}}
+.spark{position:absolute;width:34px;height:34px;background:#fff;clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);
+  filter:drop-shadow(0 0 6px #fff);animation:twinkle 1.2s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(.3) rotate(0);opacity:.3}50%{transform:scale(1) rotate(45deg);opacity:1}}
+
+.stripes{position:absolute;inset:-80px;background:repeating-linear-gradient(45deg,#ff7fb0 0 34px,#ffb6d3 34px 68px);animation:stripes 1s linear infinite}
+@keyframes stripes{to{transform:translate(96px,0)}}
+.bigcircle{position:absolute;width:420px;height:420px;border-radius:50%;left:200px;top:40px;background:radial-gradient(#fff6b0,#ffd23f 60%,#ff9f3f);opacity:.9}
+.vname{position:absolute;writing-mode:vertical-rl;font:900 46px/1 var(--font-pop);color:#fff;letter-spacing:.12em;
+  text-shadow:3px 3px 0 #c2185b,-2px -2px 0 #c2185b,2px -2px 0 #c2185b,-2px 2px 0 #c2185b;animation:dropIn .5s .2s both}
+.vname small{font-size:16px;letter-spacing:.3em;margin-top:12px;font-family:Georgia,serif;font-style:italic}
+.vname.blue{text-shadow:3px 3px 0 #1a3a8c,-2px -2px 0 #1a3a8c,2px -2px 0 #1a3a8c,-2px 2px 0 #1a3a8c}
+@keyframes dropIn{from{transform:translateY(-120px);opacity:0}}
+.op-spr{position:absolute}
+.op-spr svg{width:100%;height:100%;display:block}
+.cut.on .in-right{animation:inRight .55s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes inRight{from{transform:translateX(320px)}}
+.cut.on .rise{animation:rise 3.75s ease-out both}
+@keyframes rise{from{transform:translateY(60px)}to{transform:translateY(0)}}
+.speed{position:absolute;inset:-200px;background:repeating-conic-gradient(from 0deg at 50% 50%,#fff 0 2deg,#ffd0e4 2deg 7deg,#fff 7deg 8deg,#ffe9f2 8deg 13deg)}
+.cut.on .zoomin{animation:zoomin 1.875s ease-out both}
+@keyframes zoomin{from{transform:scale(1.25)}to{transform:scale(1)}}
+.cut.on .pan{animation:pan 3.75s linear both}
+@keyframes pan{from{transform:scale(1.18) translateY(30px)}to{transform:scale(1.18) translateY(-20px)}}
+.cut.on .panx{animation:panx .94s linear both}
+@keyframes panx{from{transform:scale(1.2) translateX(30px)}to{transform:scale(1.2) translateX(-30px)}}
+.halftone{position:absolute;inset:0}
+.halftone.y{background:radial-gradient(circle,#ffb800 30%,transparent 32%) 0 0/14px 14px,#ffe46b}
+.halftone.c{background:radial-gradient(circle,#2bb5e8 30%,transparent 32%) 0 0/14px 14px,#a6ecff}
+.wind{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);animation:wind 1.1s linear infinite}
+@keyframes wind{from{transform:translateX(700px)}to{transform:translateX(-700px)}}
+.sunburst{position:absolute;left:-330px;top:-400px;width:1300px;height:1300px;
+  background:repeating-conic-gradient(#ffd23f 0 9deg,#ff8fb8 9deg 18deg);animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cut.on .pump{animation:pump .46875s ease-out infinite}
+@keyframes pump{0%{transform:scale(1.03)}100%{transform:scale(1)}}
+.cut.on .bounce{animation:bounce .6s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes bounce{from{transform:translateY(300px)}}
+.cut.on .zoomout{animation:zoomout 3.75s ease-out both}
+@keyframes zoomout{from{transform:scale(1.35)}to{transform:scale(1)}}
+.sil svg{filter:brightness(0) drop-shadow(0 0 5px #ffd36b)}
+.credits{position:absolute;left:0;right:0;top:330px;text-align:center;font-size:12px;letter-spacing:.25em;color:#dfe6ff;line-height:2;animation:fio2 3.75s both}
+@keyframes fio2{0%{opacity:0}25%{opacity:1}}
+.shine{position:relative;overflow:hidden}
+
+/* カラオケ字幕 */
+#lyr{position:absolute;inset:0;z-index:20;pointer-events:none}
+.lrow{position:absolute;font:900 27px/1.2 var(--font-pop);white-space:nowrap;letter-spacing:.05em}
+.lrow.r0{left:34px;bottom:62px}
+.lrow.r1{right:34px;bottom:20px}
+.lrow span{display:block}
+.lrow .base{color:#fff;text-shadow:2px 0 0 #1b1f6b,-2px 0 0 #1b1f6b,0 2px 0 #1b1f6b,0 -2px 0 #1b1f6b,2px 2px 0 #1b1f6b,-2px -2px 0 #1b1f6b,2px -2px 0 #1b1f6b,-2px 2px 0 #1b1f6b}
+.lrow .fill{position:absolute;left:0;top:0;color:var(--pink);clip-path:inset(0 100% 0 0);
+  text-shadow:2px 0 0 #fff,-2px 0 0 #fff,0 2px 0 #fff,0 -2px 0 #fff,2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff}
+
+/* ---------- タイトル ---------- */
+#title .bgwrap{position:absolute;inset:0}
+#title .bgwrap svg{width:100%;height:100%}
+#title .logo{top:52px}
+#menu{position:absolute;left:0;right:0;top:262px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.mbtn{width:230px;padding:8px 0;font-size:17px;letter-spacing:.3em;color:#fff;cursor:pointer;
+  background:linear-gradient(rgba(40,40,120,.85),rgba(16,16,60,.9));border:2px solid var(--line);border-radius:4px;box-shadow:0 0 0 2px #1a1f55;text-shadow:1px 1px 0 #000}
+.mbtn:hover:not(:disabled),.mbtn:focus-visible{background:linear-gradient(#ff8fc0,#d63c7c);border-color:#fff}
+.mbtn:disabled{color:#8088aa;cursor:not-allowed}
+.copy{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:11px;letter-spacing:.2em;color:#ffe9f4;text-shadow:1px 1px 0 #2a0f3c}
+.mute{position:absolute;right:10px;top:8px;z-index:45;background:rgba(0,0,0,.4);color:#fff;border:1px solid rgba(255,255,255,.5);font-size:12px;padding:3px 9px;border-radius:3px;cursor:pointer}
+
+/* ---------- 本編 ---------- */
+#game{cursor:pointer}
+#game.shake{animation:shake .4s}
+@keyframes shake{20%{transform:translate(-8px,4px)}40%{transform:translate(7px,-5px)}60%{transform:translate(-5px,3px)}80%{transform:translate(3px,-2px)}}
+.bg{position:absolute;inset:0;transition:opacity .7s}
+.bg svg{width:100%;height:100%;display:block}
+.petal{position:absolute;top:-20px;width:9px;height:7px;background:#ffd1e0;border-radius:80% 0 80% 0;box-shadow:0 0 1px #e07a9c;animation:petal linear infinite}
+@keyframes petal{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(-160px,520px) rotate(720deg)}}
+.shoot{position:absolute;width:180px;height:2px;background:linear-gradient(90deg,#fff,transparent);transform:rotate(150deg);transform-origin:0 50%;
+  animation:shoot 4s ease-in infinite;opacity:0}
+@keyframes shoot{0%{left:620px;top:20px;opacity:0}4%{opacity:1}22%{left:300px;top:200px;opacity:0}100%{opacity:0}}
+#chars{position:absolute;inset:0}
+.spr{position:absolute;bottom:-12px;width:300px;height:450px;transition:left .45s ease,opacity .35s;animation:sprIn .4s both}
+.spr svg{width:100%;height:100%;display:block;animation:breath 3.6s ease-in-out infinite}
+@keyframes sprIn{from{opacity:0;transform:translateY(10px)}}
+@keyframes breath{50%{transform:translateY(2px)}}
+.eo{animation:blinkO 4.4s infinite}
+.ec{opacity:0;animation:blinkC 4.4s infinite}
+@keyframes blinkO{0%,92%,96.5%,100%{opacity:1}93%,95.5%{opacity:0}}
+@keyframes blinkC{0%,92%,96.5%,100%{opacity:0}93%,95.5%{opacity:1}}
+#win{position:absolute;left:14px;right:14px;bottom:12px;height:128px;box-sizing:border-box;padding:24px 26px 10px;
+  background:linear-gradient(rgba(28,34,96,.86),rgba(10,12,44,.9));border:3px double var(--line);border-radius:10px;
+  box-shadow:0 0 0 2px #1a1f55,inset 0 0 22px rgba(120,160,255,.35);font-size:19px;line-height:1.65;text-shadow:1px 1px 0 #000;z-index:10}
+#win[hidden]{display:none}
+#name{position:absolute;left:24px;top:-17px;min-width:70px;text-align:center;padding:2px 16px;font-size:15px;font-weight:bold;letter-spacing:.15em;
+  border:2px solid #fff;border-radius:5px;background:linear-gradient(#9aa6c8,#5a6488);box-shadow:0 2px 0 #1a1f55}
+#name.mio{background:linear-gradient(#ffa6cc,#e0508a)}
+#name.touka{background:linear-gradient(#8fd6ff,#3a6ad0)}
+#name.yuki{background:linear-gradient(#a8e6a0,#3f9a5a)}
+#name[hidden]{display:none}
+#text{white-space:pre-wrap}
+#cursor{display:inline-block;margin-left:4px;color:var(--gold);animation:blink .8s steps(2) infinite}
+#choices{position:absolute;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(0,0,20,.35);padding-bottom:60px}
+#choices[hidden]{display:none}
+.cbtn{width:360px;padding:12px 0;font-size:18px;letter-spacing:.12em;color:#fff;cursor:pointer;background:linear-gradient(rgba(40,44,130,.92),rgba(16,16,60,.95));
+  border:3px double var(--line);border-radius:8px;text-shadow:1px 1px 0 #000;animation:sprIn .3s both}
+.cbtn:hover,.cbtn:focus-visible{background:linear-gradient(#ff8fc0,#d63c7c);border-color:#fff}
+.cbtn::before{content:"◆ ";color:var(--gold)}
+#endcard{position:absolute;inset:0;z-index:16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;background:rgba(5,6,26,.55)}
+#endcard[hidden]{display:none}
+#endcard .big{font:900 34px/1.2 var(--font-pop);color:#fff;text-shadow:3px 3px 0 #ff2f86}
+#endcard .sub{font:italic 18px Georgia,serif;letter-spacing:.3em;color:var(--cyan)}
+#endcard .rel{font-size:15px;color:var(--gold);letter-spacing:.2em;border:1px solid var(--gold);padding:4px 14px}
+#endcard .hint{font-size:12px;color:#aab;margin-top:20px;animation:blink 1s steps(2) infinite}
+#toTitle{position:absolute;right:10px;top:8px;z-index:20;background:rgba(0,0,0,.4);color:#fff;border:1px solid rgba(255,255,255,.5);font-size:12px;padding:3px 9px;border-radius:3px;cursor:pointer}
+#gmute{right:96px}
+@media (prefers-reduced-motion:reduce){.sunburst,.stripes,.spr svg,.petal{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- 起動画面 -->
+  <div id="boot" class="screen">
+    <div>STARDUST-BIOS Ver 1.96</div>
+    <div class="dim">(C) 1996 星屑工房 SYSTEM</div>
+    <div>&nbsp;</div>
+    <div>MEMORY CHECK ....... 640KB OK</div>
+    <div>FM SOUND BOARD ..... OK</div>
+    <div>GRAPHIC 640x480 .... 256 COLORS</div>
+    <div>LOADING "HOSHIMI.EXE" ...</div>
+    <div class="start">― CLICK TO START ―</div>
+    <div class="note">音が出ます（OP 約30秒・スキップ可）</div>
+  </div>
+
+  <!-- オープニング -->
+  <div id="op" class="screen" hidden>
+    <canvas id="stars" width="640" height="480"></canvas>
+
+    <div class="cut" data-s="0" data-e="1.875">
+      <div class="presents">星屑工房 presents<small>STARDUST WORKS 1996</small></div>
+    </div>
+    <div class="cut" data-s="1.875" data-e="3.75">
+      <div class="meteor"></div>
+    </div>
+    <div class="cut" data-s="3.75" data-e="7.5">
+      <div class="op-credit">♪ OPENING THEME 「流れ星エチュード」</div>
+      <div class="logo slam"><span class="jp">星見坂<span class="s">の</span>セレナーデ</span><span class="en">HOSHIMIZAKA SERENADE</span><span class="tag">体験版</span></div>
+      <div class="spark" style="left:96px;top:120px"></div>
+      <div class="spark" style="left:510px;top:200px;animation-delay:-.6s"></div>
+      <div class="spark" style="left:440px;top:100px;animation-delay:-.3s;width:20px;height:20px"></div>
+    </div>
+    <div class="cut" data-s="7.5" data-e="9.375">
+      <div class="stripes"></div>
+      <div class="bigcircle"></div>
+      <div class="op-spr in-right" id="opMio" style="left:250px;top:40px;width:340px;height:510px"></div>
+      <div class="vname" style="left:60px;top:40px">朝比奈ミオ<small>MIO ASAHINA</small></div>
+    </div>
+    <div class="cut" data-s="9.375" data-e="11.25">
+      <div class="speed"></div>
+      <div class="op-spr zoomin" id="opMioEye" style="left:0;top:110px;width:640px;height:340px"></div>
+    </div>
+    <div class="cut" data-s="11.25" data-e="15">
+      <div class="op-spr pan" id="opRoof" style="inset:0"></div>
+      <div class="wind" style="top:90px;width:300px"></div>
+      <div class="wind" style="top:180px;width:420px;animation-delay:-.4s"></div>
+      <div class="wind" style="top:300px;width:260px;animation-delay:-.8s"></div>
+      <div class="op-spr rise" id="opTouka" style="left:60px;top:30px;width:360px;height:540px"></div>
+      <div class="vname blue" style="left:500px;top:40px">綾瀬冬華<small>TOUKA AYASE</small></div>
+    </div>
+    <div class="cut" data-s="15" data-e="15.9375">
+      <div class="halftone y"></div>
+      <div class="op-spr zoomin" id="opMioFace" style="left:120px;top:0;width:400px;height:480px"></div>
+    </div>
+    <div class="cut" data-s="15.9375" data-e="16.875">
+      <div class="halftone c"></div>
+      <div class="op-spr zoomin" id="opToukaFace" style="left:120px;top:0;width:400px;height:480px"></div>
+    </div>
+    <div class="cut" data-s="16.875" data-e="17.8125">
+      <div class="op-spr panx" id="opSlope" style="inset:0"></div>
+    </div>
+    <div class="cut" data-s="17.8125" data-e="18.75">
+      <div class="op-spr" id="opSunset" style="inset:0"></div>
+      <div class="op-spr sil in-right" id="opSilM" style="left:120px;top:90px;width:260px;height:390px"></div>
+      <div class="op-spr sil in-right" id="opSilT" style="left:300px;top:70px;width:280px;height:420px"></div>
+    </div>
+    <div class="cut" data-s="18.75" data-e="22.5">
+      <div class="pump" style="position:absolute;inset:0">
+        <div class="sunburst"></div>
+        <div class="op-spr bounce" id="opMio2" style="left:30px;top:50px;width:300px;height:450px"></div>
+        <div class="op-spr bounce" id="opTouka2" style="left:310px;top:40px;width:310px;height:465px;animation-delay:.15s"></div>
+        <div class="spark" style="left:40px;top:60px"></div>
+        <div class="spark" style="left:560px;top:90px;animation-delay:-.5s"></div>
+        <div class="spark" style="left:300px;top:30px;animation-delay:-.8s;width:22px;height:22px"></div>
+      </div>
+    </div>
+    <div class="cut" data-s="22.5" data-e="26.25">
+      <div class="op-spr zoomout" id="opHill" style="inset:0"></div>
+    </div>
+    <div class="cut" data-s="26.25" data-e="31">
+      <div class="logo slam" style="top:120px"><span class="jp">星見坂<span class="s">の</span>セレナーデ</span><span class="en">HOSHIMIZAKA SERENADE</span><span class="tag">体験版 ver.0.96</span></div>
+      <div class="credits">原画・シナリオ・音楽　星屑工房<br>主題歌「流れ星エチュード」</div>
+      <div class="spark" style="left:110px;top:110px"></div>
+      <div class="spark" style="left:500px;top:220px;animation-delay:-.6s"></div>
+    </div>
+
+    <div id="lyr">
+      <div class="lrow r0"><span class="base"></span><span class="fill"></span></div>
+      <div class="lrow r1"><span class="base"></span><span class="fill"></span></div>
+    </div>
+    <div id="flash"></div>
+    <div id="whiteout"></div>
+    <div id="optime"></div>
+    <button id="skip" type="button">SKIP ▶▶</button>
+  </div>
+
+  <!-- タイトル -->
+  <div id="title" class="screen" hidden>
+    <div class="bgwrap" id="titleBg"></div>
+    <div class="logo"><span class="jp">星見坂<span class="s">の</span>セレナーデ</span><span class="en">HOSHIMIZAKA SERENADE</span><span class="tag">体験版</span></div>
+    <div id="menu">
+      <button class="mbtn" id="bStart" type="button">はじめから</button>
+      <button class="mbtn" id="bOP" type="button">オープニング</button>
+      <button class="mbtn" type="button" disabled title="体験版では選べません">つづきから</button>
+    </div>
+    <div class="copy">©1996 星屑工房 STARDUST WORKS　／　CLICK OR PRESS ENTER</div>
+    <button class="mute" id="tmute" type="button">♪ ON</button>
+  </div>
+
+  <!-- 本編 -->
+  <div id="game" class="screen" hidden>
+    <div id="bgs"></div>
+    <div id="chars"></div>
+    <div id="win"><div id="name" hidden></div><div id="text"></div></div>
+    <div id="choices" hidden></div>
+    <div id="endcard" hidden>
+      <div class="big">体験版はここまでです</div>
+      <div class="sub">～ to be continued ～</div>
+      <div class="rel">1996年 冬 発売予定!?</div>
+      <div class="hint">クリックでタイトルへ</div>
+    </div>
+    <button class="mute" id="gmute" type="button">♪ ON</button>
+    <button id="toTitle" type="button">タイトルへ</button>
+  </div>
+
+  <div id="dither"></div>
+  <div id="crt"></div>
+</div>
+
+<script>
+"use strict";
+/* ================= 画面フィット ================= */
+const stage=document.getElementById('stage');
+function fit(){const s=Math.min(innerWidth/640,innerHeight/480);stage.style.transform=`translate(-50%,-50%) scale(${s})`;}
+addEventListener('resize',fit);fit();
+const $=id=>document.getElementById(id);
+function show(id){for(const s of document.querySelectorAll('.screen'))s.hidden=s.id!==id;}
+
+/* ================= キャラ立ち絵 (SVG 自作) ================= */
+let UID=0;
+const LINE='#3a2030',SKIN='#ffe6d5',SKIN_D='#f5c0ab';
+const CH={
+  mio:{hair:'#ff9cbc',hairD:'#d95a88',hairL:'#ffe3ee',eye:'#e2457e',eyeD:'#6e1440',eyeL:'#ffb0d0',style:'twin'},
+  touka:{hair:'#4a5cbc',hairD:'#26327a',hairL:'#b2c0ff',eye:'#2aa6d2',eyeD:'#0e3658',eyeL:'#a6eeff',style:'long',cool:true}
+};
+const EYE_SHAPE='M-21,-10 Q-2,-34 21,-15 Q23,22 0,26 Q-22,24 -21,-10 Z';
+function eye(c,expr,side,u){
+  const cx=side<0?165:235,cy=218,sx=side<0?-1:1;
+  const tf=`translate(${cx},${cy}) scale(${sx},${c.cool?0.86:1}) rotate(${c.cool?-5:0})`;
+  const closed=`<path d="M-20,0 Q0,9 21,-2" fill="none" stroke="${LINE}" stroke-width="4" stroke-linecap="round"/>`;
+  if(expr==='happy') return `<g transform="${tf}"><path d="M-19,6 Q0,-14 20,4" fill="none" stroke="${LINE}" stroke-width="4.5" stroke-linecap="round"/></g>`;
+  const sur=expr==='surprise';
+  const irx=sur?11:14,iry=sur?16:20,prx=sur?4:6.5,pry=sur?6:10;
+  let open=`<path d="${EYE_SHAPE}" fill="#fff"/>
+   <g clip-path="url(#ec${u})"><ellipse cx="1" cy="4" rx="${irx}" ry="${iry}" fill="url(#ir${u})" stroke="${c.eyeD}" stroke-width="1.5"/>
+   <ellipse cx="1" cy="7" rx="${prx}" ry="${pry}" fill="${c.eyeD}"/>
+   <path d="M-22,-14 Q0,-30 22,-18 L22,-4 Q0,-16 -22,-2Z" fill="${c.eyeD}" opacity=".25"/></g>
+   <circle cx="-5" cy="-5" r="5.5" fill="#fff"/><circle cx="7" cy="13" r="2.6" fill="#fff"/>
+   <path d="M-24,-8 Q-3,-37 23,-16" fill="none" stroke="${LINE}" stroke-width="6" stroke-linecap="round"/>
+   <path d="M20,-15 L30,-11" stroke="${LINE}" stroke-width="4" stroke-linecap="round"/>
+   <path d="M-8,26 Q4,28 15,21" fill="none" stroke="${LINE}" stroke-width="2"/>`;
+  if(expr==='pout') open+=`<path d="M-27,-44 L30,-44 L30,-7 Q0,-14 -27,-3Z" fill="${SKIN}"/><path d="M-25,-4 Q0,-14 27,-7" fill="none" stroke="${LINE}" stroke-width="5" stroke-linecap="round"/>`;
+  return `<g transform="${tf}"><g class="eo">${open}</g><g class="ec">${closed}</g></g>`;
+}
+function brow(c,expr,side){
+  const cx=side<0?165:235,cy=218,sx=side<0?-1:1;
+  let d='M-16,-37 Q2,-45 20,-38';
+  if(expr==='surprise') d='M-16,-45 Q2,-54 20,-46';
+  if(expr==='pout') d='M-16,-34 Q2,-38 20,-44';
+  if(c.cool&&expr!=='surprise'&&expr!=='blush'&&expr!=='smile') d='M-16,-35 Q4,-42 20,-42';
+  return `<path transform="translate(${cx},${cy}) scale(${sx},1)" d="${d}" fill="none" stroke="${LINE}" stroke-width="3" stroke-linecap="round"/>`;
+}
+function mouth(expr){
+  switch(expr){
+    case 'smile':case 'blush':return `<path d="M188,262 Q200,273 212,262" fill="none" stroke="${LINE}" stroke-width="2.6" stroke-linecap="round"/>`;
+    case 'happy':return `<path d="M185,259 Q200,284 215,259 Z" fill="#c64a5c" stroke="${LINE}" stroke-width="2.5" stroke-linejoin="round"/><path d="M193,274 Q200,268 207,274 Q200,279 193,274Z" fill="#ff8f9a"/>`;
+    case 'surprise':return `<ellipse cx="200" cy="267" rx="6" ry="8" fill="#a53a4c" stroke="${LINE}" stroke-width="2.4"/>`;
+    case 'pout':return `<path d="M192,268 Q200,262 208,268" fill="none" stroke="${LINE}" stroke-width="2.6" stroke-linecap="round"/>`;
+    case 'cool':return `<path d="M193,266 L207,265" stroke="${LINE}" stroke-width="2.4" stroke-linecap="round"/>`;
+    default:return `<path d="M192,265 Q200,269 208,265" fill="none" stroke="${LINE}" stroke-width="2.5" stroke-linecap="round"/>`;
+  }
+}
+function blush(){
+  let s='';for(const x of [154,246]){s+=`<ellipse cx="${x}" cy="252" rx="19" ry="8" fill="#ff7f99" opacity=".45"/>`;
+    for(let i=-1;i<=1;i++)s+=`<path d="M${x+i*8-3},256 l6,-8" stroke="#e0506e" stroke-width="1.6" stroke-linecap="round"/>`;}
+  return s;
+}
+/** id: 'mio'|'touka', expr, vb: viewBox (クロップ用) */
+function charSVG(id,expr='normal',vb='0 0 400 600',par='xMidYMax meet'){
+  const c=CH[id],u=++UID,H=c.hair,HD=c.hairD;
+  const mir=s=>`${s}<g transform="translate(400,0) scale(-1,1)">${s}</g>`;
+  let back='',front='',acc='';
+  if(c.style==='twin'){
+    back=mir(`<path d="M138,100 C66,96 34,200 46,320 C54,400 38,460 56,530 L74,500 L88,522 C100,430 92,360 96,290 C100,210 120,150 150,124 Z" fill="${H}"/><path d="M70,190 C60,260 66,330 70,420" fill="none" stroke="${HD}" stroke-width="2"/>`);
+    acc=mir(`<path d="M138,100 L104,76 L102,124 Z" fill="#ffe066"/><path d="M138,100 L170,78 L168,124 Z" fill="#ffe066"/><circle cx="138" cy="101" r="8" fill="#ffcc33"/>`)
+      +`<path d="M198,58 C204,24 238,20 238,38 C224,32 212,40 207,58 Z" fill="${H}"/>`;
+  }else{
+    back=`<path d="M126,120 C92,240 84,420 78,600 L322,600 C316,420 308,240 274,120 C250,70 150,70 126,120 Z" fill="${H}"/>`
+      +`<path d="M110,300 C104,400 100,500 98,600 M290,300 C296,400 300,500 302,600" fill="none" stroke="${HD}" stroke-width="2"/>`;
+    acc=`<path d="M124,146 Q200,48 276,146" fill="none" stroke="${LINE}" stroke-width="13" stroke-linecap="round"/><path d="M124,146 Q200,48 276,146" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>`;
+  }
+  const lock=`<path d="M124,150 C112,220 116,290 106,352 L124,332 L134,348 C142,280 140,210 146,160 Z" fill="${H}"/>`;
+  front=mir(lock)+`<path d="M122,176 L136,124 L150,170 L164,116 L180,176 L196,110 L212,174 L228,116 L244,172 L258,124 L278,176 C292,94 250,56 200,56 C150,56 108,94 122,176 Z" fill="${H}"/>
+   <path d="M164,116 Q160,90 176,70 M228,116 Q236,90 224,70 M196,110 Q195,86 200,62" fill="none" stroke="${HD}" stroke-width="2"/>`;
+  const body=`<path d="M178,262 L178,362 L222,362 L222,262 Z" fill="${SKIN}"/>
+   <path d="M178,282 Q200,314 222,282 L222,302 Q200,332 178,302 Z" fill="${SKIN_D}" stroke="none"/>
+   <path d="M60,600 C66,480 96,392 165,352 L235,352 C304,392 334,480 340,600 Z" fill="#fbfbff"/>
+   ${mir(`<path d="M62,600 C68,480 98,394 160,356 L150,376 C112,424 98,500 98,600 Z" fill="#dde2f2" stroke="none"/>`)}
+   <path d="M162,350 L200,446 L238,350 Z" fill="${SKIN}"/>
+   <path d="M174,388 L200,446 L226,388 Z" fill="#fbfbff"/>
+   <path d="M162,350 L200,446 L238,350 L300,386 C306,414 302,438 292,452 L200,502 L108,452 C98,438 94,414 100,386 Z" fill="#26397c"/>
+   <path d="M114,396 L200,482 L286,396" fill="none" stroke="#fff" stroke-width="3.5"/>
+   <path d="M200,476 L158,460 L164,502 Z" fill="#e8384f"/><path d="M200,476 L242,460 L236,502 Z" fill="#e8384f"/>
+   <path d="M192,482 L176,562 L198,542 Z" fill="#e8384f"/><path d="M208,482 L224,562 L202,542 Z" fill="#e8384f"/>
+   <rect x="189" y="466" width="22" height="20" rx="6" fill="#ff5a6e"/>`;
+  const face=`<path d="M130,150 C128,215 160,272 200,298 C240,272 272,215 270,150 C270,100 240,80 200,80 C160,80 130,100 130,150 Z" fill="${SKIN}"/>`;
+  const feats=eye(c,expr,-1,u)+eye(c,expr,1,u)
+   +`<path d="M203,240 l-3,7" stroke="${SKIN_D}" stroke-width="2" stroke-linecap="round"/>`+mouth(expr)
+   +((expr==='blush'||expr==='pout'||expr==='happy')?blush():'');
+  const delay=(-Math.random()*4).toFixed(2);
+  return `<svg viewBox="${vb}" preserveAspectRatio="${par}" xmlns="http://www.w3.org/2000/svg" style="--d:${delay}s">
+  <defs><linearGradient id="ir${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.eyeD}"/><stop offset=".55" stop-color="${c.eye}"/><stop offset="1" stop-color="${c.eyeL}"/></linearGradient>
+  <clipPath id="ec${u}"><path d="${EYE_SHAPE}"/></clipPath></defs>
+  <g stroke="${LINE}" stroke-width="3" stroke-linejoin="round">${back}${body}${face}</g>
+  <g>${feats}</g>
+  <g stroke="${LINE}" stroke-width="3" stroke-linejoin="round">${front}${acc}</g>
+  <path d="M142,116 Q200,90 258,116" fill="none" stroke="${c.hairL}" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+  ${brow(c,expr,-1)}${brow(c,expr,1)}
+  </svg>`.replace(/class="eo"/g,`class="eo" style="animation-delay:${delay}s"`).replace(/class="ec"/g,`class="ec" style="animation-delay:${delay}s"`);
+}
+
+/* ================= 背景 (SVG 自作) ================= */
+function grad(u,stops){return `<linearGradient id="g${u}" x1="0" y1="0" x2="0" y2="1">${stops.map(([o,c])=>`<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;}
+function bgSlope(mode){
+  const u=++UID,S=mode==='sunset';
+  const P=S?{sky:[[0,'#352a78'],[.55,'#d8607a'],[1,'#ffc27a']],sea:'#c45a78',glint:'#ffe0a0',town:'#5a3466',road:'#6e566a',walk:'#a07a86',tree:'#ff9fb6',treeD:'#c8527a',house:'#8c5a6c',roof:'#43274a',cloud:'#ffb7a6',win:'#ffd36b'}
+          :{sky:[[0,'#4aa8ff'],[1,'#e2f6ff']],sea:'#3a92d4',glint:'#e6f6ff',town:'#97afd0',road:'#9696a6',walk:'#d8cdbb',tree:'#ffc4d6',treeD:'#f08eb0',house:'#f4e8da',roof:'#5d74ad',cloud:'#fff',win:'#9fd2f0'};
+  return `<svg viewBox="0 0 640 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${grad(u,P.sky)}</defs>
+  <rect width="640" height="480" fill="url(#g${u})"/>
+  ${S?'<circle cx="330" cy="212" r="46" fill="#ffe28e"/>':''}
+  <g fill="${P.cloud}" opacity=".85"><ellipse cx="120" cy="84" rx="74" ry="16"/><ellipse cx="170" cy="70" rx="48" ry="18"/><ellipse cx="500" cy="118" rx="84" ry="14"/><ellipse cx="540" cy="104" rx="42" ry="16"/></g>
+  <rect y="214" width="640" height="42" fill="${P.sea}"/>
+  <g stroke="${P.glint}" stroke-width="2" opacity=".8"><line x1="296" y1="226" x2="364" y2="226"/><line x1="276" y1="236" x2="384" y2="236"/><line x1="100" y1="232" x2="140" y2="232"/><line x1="500" y1="242" x2="560" y2="242"/></g>
+  <path d="M0,256 L0,236 L30,236 L30,226 L60,226 L60,240 L90,240 L90,220 L110,220 L110,238 L150,238 L150,230 L190,230 L190,244 L240,244 L240,236 L280,236 L280,256 Z" fill="${P.town}"/>
+  <path d="M360,256 L360,238 L400,238 L400,228 L430,228 L430,240 L470,240 L470,222 L500,222 L500,236 L540,236 L540,230 L580,230 L580,242 L640,242 L640,256 Z" fill="${P.town}"/>
+  <rect y="256" width="640" height="224" fill="${P.walk}"/>
+  <path d="M96,480 L544,480 L344,256 L296,256 Z" fill="${P.road}"/>
+  <line x1="320" y1="480" x2="320" y2="258" stroke="#fff" stroke-width="4" stroke-dasharray="34 22" opacity=".75"/>
+  <g stroke="#3a3040" stroke-width="2"><path d="M560,480 L352,262" stroke="#e8e8f0" stroke-width="5"/>
+  ${[0,1,2,3,4,5].map(i=>{const t=i/6,x=560-(208*t),y=480-(218*t),h=34*(1-t)+6;return `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+h}"/>`}).join('')}</g>
+  <g stroke="#3a3040" stroke-width="2.5">
+   <path d="M0,480 L0,300 L70,262 L140,300 L140,480 Z" fill="${P.house}"/><path d="M-10,304 L70,256 L150,304 L140,310 L70,270 L0,310 Z" fill="${P.roof}"/>
+   <rect x="22" y="330" width="34" height="30" fill="${P.win}"/><rect x="84" y="330" width="34" height="30" fill="${P.win}"/>
+   <path d="M640,480 L640,310 L560,276 L500,306 L500,480 Z" fill="${P.house}"/><path d="M650,314 L560,270 L490,310 L500,316 L560,284 L640,320 Z" fill="${P.roof}"/>
+   <rect x="520" y="336" width="30" height="28" fill="${P.win}"/><rect x="584" y="336" width="34" height="28" fill="${P.win}"/>
+  </g>
+  <rect x="190" y="40" width="11" height="440" fill="#4a3a44"/><rect x="168" y="70" width="56" height="6" fill="#4a3a44"/>
+  <rect x="306" y="196" width="3" height="60" fill="#4a3a44"/>
+  <g fill="none" stroke="#2a2430" stroke-width="1.4"><path d="M172,74 Q250,150 307,200"/><path d="M220,74 Q270,140 308,198"/><path d="M0,120 Q90,110 172,74"/></g>
+  <rect x="592" y="90" width="18" height="230" fill="#6a4a4a" stroke="#3a3040" stroke-width="2"/>
+  <g fill="${P.tree}"><circle cx="560" cy="60" r="72"/><circle cx="640" cy="44" r="82"/><circle cx="496" cy="18" r="52"/><circle cx="40" cy="20" r="70"/><circle cx="128" cy="-4" r="60"/></g>
+  <g fill="${P.treeD}" opacity=".55"><circle cx="530" cy="96" r="20"/><circle cx="600" cy="110" r="26"/><circle cx="470" cy="44" r="14"/><circle cx="60" cy="70" r="22"/><circle cx="20" cy="50" r="14"/></g>
+  </svg>`;
+}
+function bgClass(evening){
+  const u=++UID;
+  const sky=evening?[[0,'#5a3a8a'],[.6,'#ff8a6a'],[1,'#ffd28a']]:[[0,'#5ab4ff'],[1,'#dff4ff']];
+  const desk=(x,y,s)=>`<g transform="translate(${x},${y}) scale(${s})" stroke="#4a3a30" stroke-width="2"><path d="M0,0 L120,0 L132,26 L-12,26 Z" fill="#dcb07a"/><rect x="-12" y="26" width="144" height="8" fill="#b8884e"/><path d="M4,34 L4,110 M116,34 L116,110" stroke="#77778a" stroke-width="6"/><rect x="10" y="34" width="100" height="34" fill="#9a9aae"/></g>`;
+  return `<svg viewBox="0 0 640 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${grad(u,sky)}<clipPath id="w${u}"><rect x="24" y="54" width="212" height="242"/></clipPath></defs>
+  <rect width="640" height="480" fill="#efe1c4"/>
+  <rect y="0" width="640" height="28" fill="#e2d2b2"/>
+  <rect x="24" y="54" width="212" height="242" fill="url(#g${u})"/>
+  <g clip-path="url(#w${u})"><g fill="${evening?'#e88aa0':'#ffc4d6'}"><circle cx="60" cy="300" r="60"/><circle cx="150" cy="290" r="50"/><circle cx="230" cy="310" r="56"/></g>
+   <g fill="${evening?'#fff0c0':'#fff'}" opacity=".7"><ellipse cx="90" cy="100" rx="50" ry="12"/><ellipse cx="190" cy="140" rx="40" ry="10"/></g></g>
+  <g fill="none" stroke="#8a7a66" stroke-width="8"><rect x="24" y="54" width="212" height="242"/><line x1="130" y1="54" x2="130" y2="296"/><line x1="24" y1="176" x2="236" y2="176" stroke-width="5"/></g>
+  <rect x="0" y="40" width="22" height="280" fill="#eef1f8" stroke="#bfc6d6" stroke-width="2"/>
+  <rect x="284" y="78" width="336" height="166" fill="#2e5b45" stroke="#7a5a3a" stroke-width="10"/>
+  <g fill="#f4f4e6" font-family="Hiragino Maru Gothic ProN, Yu Gothic, sans-serif"><text x="314" y="128" font-size="24">4月8日（月）</text><text x="314" y="168" font-size="20">始業式・ホームルーム</text><text x="300" y="214" font-size="14">★ 天文部 部員募集中 ★</text><text x="520" y="230" font-size="13">日直　相沢</text></g>
+  <rect x="290" y="244" width="324" height="7" fill="#9a7a52"/>
+  <circle cx="452" cy="40" r="16" fill="#fff" stroke="#555" stroke-width="3"/><path d="M452,40 L452,30 M452,40 L460,44" stroke="#333" stroke-width="2"/>
+  <rect y="356" width="640" height="124" fill="#b8875a"/>
+  <g stroke="#9a6c42" stroke-width="2"><line x1="0" y1="380" x2="640" y2="380"/><line x1="0" y1="410" x2="640" y2="410"/><line x1="0" y1="446" x2="640" y2="446"/></g>
+  ${desk(300,300,.7)}${desk(420,300,.7)}${desk(540,300,.7)}${desk(20,380,1.1)}${desk(470,392,1.1)}
+  ${evening?'<rect width="640" height="480" fill="#ff6a20" opacity=".2"/>':''}
+  </svg>`;
+}
+function bgRoof(){
+  const u=++UID;
+  return `<svg viewBox="0 0 640 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${grad(u,[[0,'#2a2868'],[.45,'#c25a86'],[.75,'#ff8a5a'],[1,'#ffd27a']])}
+   <pattern id="m${u}" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="18" height="18" fill="none" stroke="#3a2c40" stroke-width="1.6"/></pattern></defs>
+  <rect width="640" height="480" fill="url(#g${u})"/>
+  <circle cx="440" cy="300" r="54" fill="#ffe59a"/>
+  <g fill="#ffb08e" opacity=".55"><rect x="40" y="150" width="260" height="6" rx="3"/><rect x="380" y="200" width="220" height="5" rx="3"/><rect x="120" y="240" width="160" height="4" rx="2"/></g>
+  <path d="M0,330 L0,300 L40,300 L40,284 L80,284 L80,306 L130,306 L130,276 L160,276 L160,300 L220,300 L220,290 L280,290 L280,310 L360,310 L360,288 L400,288 L400,304 L470,304 L470,280 L510,280 L510,300 L580,300 L580,292 L640,292 L640,330 Z" fill="#4a2c54"/>
+  <rect y="330" width="640" height="150" fill="#8a7f92"/>
+  <g stroke="#6a6074" stroke-width="2"><line x1="0" y1="370" x2="640" y2="370"/><line x1="0" y1="420" x2="640" y2="420"/><line x1="160" y1="330" x2="100" y2="480"/><line x1="480" y1="330" x2="540" y2="480"/></g>
+  <rect x="0" y="196" width="640" height="140" fill="url(#m${u})"/>
+  <g stroke="#3a2c40" stroke-width="5"><line x1="0" y1="196" x2="640" y2="196"/><line x1="0" y1="336" x2="640" y2="336"/>
+  ${Array.from({length:9},(_,i)=>`<line x1="${i*80}" y1="196" x2="${i*80}" y2="336"/>`).join('')}</g>
+  <g stroke="#3a2c40" stroke-width="2.5"><rect x="520" y="150" width="96" height="70" rx="10" fill="#c8c0d0"/><ellipse cx="568" cy="150" rx="48" ry="10" fill="#dcd4e4"/><path d="M532,220 L528,300 M604,220 L608,300" stroke-width="6"/></g>
+  </svg>`;
+}
+function bgNight(hill=true){
+  const u=++UID;let st='';
+  for(let i=0;i<120;i++){const x=(i*137.5)%640,y=(i*71.3)%330,r=(i%7===0)?1.8:(i%3===0?1.1:.7);st+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="#fff" opacity="${(.4+(i%5)/8).toFixed(2)}"/>`;}
+  return `<svg viewBox="0 0 640 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${grad(u,[[0,'#04061e'],[.7,'#18286a'],[1,'#3a3c8a']])}</defs>
+  <rect width="640" height="480" fill="url(#g${u})"/>${st}
+  ${hill?`<path d="M0,480 L0,380 C120,340 220,330 330,350 C440,370 540,360 640,330 L640,480 Z" fill="#0a0c24"/>
+  <g fill="#ffd36b">${Array.from({length:26},(_,i)=>`<rect x="${(i*53)%600+10}" y="${420+(i*17)%50}" width="3" height="3"/>`).join('')}</g>`:''}
+  </svg>`;
+}
+function silhouettes(){ // 丘の上の二人 (OP 用)
+  return `<svg viewBox="0 0 640 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${bgNight(false).replace(/^<svg[^>]*>|<\/svg>$/g,'')}
+  <path d="M0,480 L0,400 C150,330 250,318 330,320 C430,322 520,350 640,380 L640,480 Z" fill="#070818"/>
+  <g fill="#070818"><circle cx="300" cy="262" r="12"/><path d="M286,262 C270,270 268,290 276,300 L282,276 Z M314,262 C330,270 332,290 324,300 L318,276 Z"/><path d="M290,274 L310,274 L318,322 L282,322 Z"/>
+  <circle cx="340" cy="258" r="12"/><path d="M328,256 C324,280 326,300 330,320 L352,320 C356,300 356,280 352,256 Z"/><path d="M330,272 L350,272 L358,322 L322,322 Z"/></g>
+  </svg>`;
+}
+
+/* ================= 音 (Web Audio・FM 音源風) ================= */
+const AU={ctx:null,master:null,dly:null,noise:null,cur:null,muted:false};
+function initAudio(){
+  if(AU.ctx){if(AU.ctx.state==='suspended')AU.ctx.resume();return;}
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    const ctx=AU.ctx=new C();
+    const comp=ctx.createDynamicsCompressor();comp.connect(ctx.destination);
+    AU.master=ctx.createGain();AU.master.gain.value=.55;AU.master.connect(comp);
+    AU.dly=ctx.createDelay(1);AU.dly.delayTime.value=.28;const fb=ctx.createGain();fb.gain.value=.3;const wet=ctx.createGain();wet.gain.value=.22;
+    AU.dly.connect(fb);fb.connect(AU.dly);AU.dly.connect(wet);wet.connect(AU.master);
+    const b=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;AU.noise=b;
+  }catch(e){AU.ctx=null;}
+}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function tone(dest,t,midi,dur,o={}){
+  const ctx=AU.ctx,type=o.type||'square',vol=o.vol??.08,a=o.a??.01,r=o.r??.06;
+  const osc=ctx.createOscillator();osc.type=type;osc.frequency.value=mtof(midi);if(o.detune)osc.detune.value=o.detune;
+  const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+a);
+  g.gain.setValueAtTime(vol*(o.sus??.8),t+Math.max(a,dur-r));g.gain.linearRampToValueAtTime(0,t+dur);
+  let node=osc;
+  if(o.cut){const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=o.cut;f.Q.value=o.q||1;osc.connect(f);node=f;}
+  node.connect(g);g.connect(dest);if(o.send){const s=ctx.createGain();s.gain.value=o.send;g.connect(s);s.connect(AU.dly);}
+  if(o.vib&&dur>.35){const l=ctx.createOscillator(),lg=ctx.createGain();l.frequency.value=5.5;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(o.vib,t+.3);l.connect(lg);lg.connect(osc.detune);l.start(t);l.stop(t+dur+.05);}
+  osc.start(t);osc.stop(t+dur+.05);
+}
+function noiseHit(dest,t,{vol=.2,dur=.1,type='highpass',freq=6000}={}){
+  const ctx=AU.ctx,s=ctx.createBufferSource();s.buffer=AU.noise;const f=ctx.createBiquadFilter();f.type=type;f.frequency.value=freq;
+  const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f);f.connect(g);g.connect(dest);s.start(t,Math.random()*.5);s.stop(t+dur+.02);
+}
+function kick(dest,t){const ctx=AU.ctx,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+.12);
+  g.gain.setValueAtTime(.55,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.connect(g);g.connect(dest);o.start(t);o.stop(t+.22);}
+function snare(dest,t,v=1){noiseHit(dest,t,{vol:.22*v,dur:.14,type:'bandpass',freq:1900});tone(dest,t,55,.08,{type:'triangle',vol:.1*v,a:.002,r:.06});}
+
+const CHORD={C:[36,[60,64,67]],F:[41,[57,60,65]],G:[43,[59,62,67]],Em:[40,[59,64,67]],Am:[45,[57,60,64]]};
+// OP 曲「流れ星エチュード」 128BPM / 16小節 = 30秒。王道進行 IV-V-iii-vi
+const LYR=[
+  {t:'坂道のむこう　流れ星ひとつ',m:[[69,.5],[72,.5],[72,.5],[74,.5],[76,1],[74,.5],[72,.5],[74,.5],[76,.5],[79,.5],[76,.5],[74,1.5],[0,.5]]},
+  {t:'キミの名前を　夜空に呼んだ',m:[[71,.5],[72,.5],[74,.5],[76,.5],[79,1],[76,.5],[74,.5],[72,.5],[71,.5],[72,.5],[69,.5],[69,1.5],[0,.5]]},
+  {t:'ときめくハートは　秘密のメロディ',m:[[69,.5],[72,.5],[72,.5],[74,.5],[76,1],[77,.5],[76,.5],[74,.5],[76,.5],[79,1],[81,1],[79,1]]},
+  {t:'制服のまま　明日へ駆けだそう',m:[[76,.5],[77,.5],[79,.5],[81,.5],[83,1],[81,.5],[79,.5],[81,1],[79,.5],[77,.5],[76,1],[74,1]]},
+  {t:'Shooting Star!　願いをのせて',m:[[84,1],[83,.5],[81,.5],[79,1],[76,.5],[79,.5],[81,.5],[79,.5],[77,.5],[76,.5],[74,1],[76,1]]},
+  {t:'この想い　ずっと　輝いて',m:[[76,.5],[79,.5],[81,.5],[84,.5],[83,1],[81,.5],[79,.5],[81,1],[83,1],[84,2]]},
+];
+const SONGS={
+  op:{bpm:128,lead:{type:'square',vol:.085,vib:9,send:.5},drums:true,arp:true,crash:[2,10,14],fill:[1,9],
+    bars:['F','G','F','G','Em','Am','F','G','Em','Am','F','G','Em','Am','F','C'],
+    mel:[[0,8],...LYR.flatMap(l=>l.m),[81,1],[79,1],[77,1],[76,1],[72,4]]},
+  title:{bpm:92,lead:{type:'triangle',vol:.12,vib:6,send:.6},drums:false,arp:true,soft:true,
+    bars:['F','G','Em','Am','F','G','C','C'],mel:[...LYR[4].m,...LYR[5].m,...LYR[4].m,[81,1],[79,1],[77,1],[76,1],[72,4]]},
+  day:{bpm:112,lead:{type:'square',vol:.05,vib:5,send:.4,cut:2400},drums:true,light:true,arp:false,
+    bars:['C','Am','F','G','C','Am','F','G'],
+    mel:[[72,1],[76,1],[79,1],[76,1],[76,.5],[74,.5],[72,1],[69,2],[69,1],[72,1],[77,1],[76,.5],[74,.5],[74,3],[0,1],
+         [72,1],[76,1],[79,1.5],[81,.5],[79,1],[76,1],[72,2],[77,1],[76,1],[74,1],[72,1],[71,2],[74,2]]},
+};
+function playSong(name,loop=true){
+  stopSong();if(!AU.ctx)return null;
+  const s=SONGS[name],ctx=AU.ctx,bus=ctx.createGain();bus.gain.value=1;bus.connect(AU.master);
+  const ev={};let b=0;for(const [m,d] of s.mel){if(m)(ev[Math.round(b*4)]??=[]).push([m,d]);b+=d;}
+  const st={s,bus,ev,loop,n:0,step:60/s.bpm/4,total:s.bars.length*16,t0:ctx.currentTime+.12,done:false};
+  st.timer=setInterval(()=>sched(st),25);sched(st);AU.cur=st;return st;
+}
+function sched(st){
+  const ctx=AU.ctx,ahead=ctx.currentTime+.3;
+  while(!st.done){
+    const t=st.t0+st.n*st.step;if(t>ahead)break;
+    if(st.n>=st.total&&!st.loop){st.done=true;clearInterval(st.timer);break;}
+    stepNote(st,st.n%st.total,t);st.n++;
+  }
+}
+function stepNote(st,k,t){
+  const s=st.s,bus=st.bus,bar=Math.floor(k/16),pos=k%16,[root,tones]=CHORD[s.bars[bar]],spb=st.step*4;
+  const last=!st.loop&&bar===s.bars.length-1;
+  if(pos===0){for(const n of tones)tone(bus,t,n,last?spb*4:spb*4-.02,{type:s.soft?'triangle':'sawtooth',vol:s.soft?.035:.022,a:.04,r:.2,cut:s.soft?3000:1600});
+    if(s.crash&&s.crash.includes(bar))noiseHit(bus,t,{vol:.16,dur:1.4,freq:4500});}
+  if(last){if(pos===0){kick(bus,t);tone(bus,t,root,spb*3,{type:'sawtooth',vol:.12,cut:700});}return;}
+  if(pos%2===0){const n=root+((pos%4===2)?12:0);tone(bus,t,n,st.step*1.8,{type:s.soft?'triangle':'sawtooth',vol:s.soft?.09:.11,cut:s.soft?900:650,a:.005,r:.04});}
+  if(s.arp){const n=tones[pos%3]+12+(pos%8>=4?12:0);tone(bus,t,n,st.step*.7,{type:'square',vol:s.soft?.018:.022,a:.003,r:.03,cut:4000});}
+  if(s.drums){
+    if(s.light){if(pos===0||pos===8)kick(bus,t);if(pos===4||pos===12)snare(bus,t,.5);if(pos%2===0)noiseHit(bus,t,{vol:.04,dur:.04,freq:8000});}
+    else{
+      const chorus=bar>=10;
+      if(pos===0||pos===8||(chorus&&(pos===6||pos===10)))kick(bus,t);
+      if(s.fill&&s.fill.includes(bar)&&pos>=8){snare(bus,t,.5+(pos-8)/16);}
+      else if(pos===4||pos===12)snare(bus,t);
+      if(pos%2===0)noiseHit(bus,t,{vol:pos%4===2?.08:.05,dur:pos%4===2?.09:.04,freq:7500});
+    }
+  }
+  const evs=st.ev[k];if(evs)for(const [m,d] of evs){const L=s.lead;tone(bus,t,m,d*spb*.95,{type:L.type,vol:L.vol,vib:L.vib,send:L.send,cut:L.cut,a:.012,r:.06});
+    if(!s.soft)tone(bus,t,m,d*spb*.95,{type:'triangle',vol:L.vol*.6,detune:7,a:.012,r:.06});}
+}
+function stopSong(){const st=AU.cur;if(!st)return;AU.cur=null;clearInterval(st.timer);st.done=true;
+  try{const t=AU.ctx.currentTime;st.bus.gain.cancelScheduledValues(t);st.bus.gain.setValueAtTime(st.bus.gain.value,t);st.bus.gain.linearRampToValueAtTime(0,t+.35);setTimeout(()=>st.bus.disconnect(),600);}catch(e){}}
+function se(kind){if(!AU.ctx||AU.muted)return;const t=AU.ctx.currentTime,d=AU.master;
+  if(kind==='hit'){noiseHit(d,t,{vol:.35,dur:.25,type:'lowpass',freq:1200});kick(d,t);}
+  if(kind==='select'){[72,76,79,84].forEach((m,i)=>tone(d,t+i*.05,m,.12,{type:'square',vol:.05,send:.3}));}
+}
+function setMute(m){AU.muted=m;if(AU.master)AU.master.gain.value=m?0:.55;for(const b of [$('tmute'),$('gmute')])b.textContent=m?'♪ OFF':'♪ ON';}
+$('tmute').onclick=e=>{e.stopPropagation();setMute(!AU.muted);};
+$('gmute').onclick=e=>{e.stopPropagation();setMute(!AU.muted);};
+
+/* ================= オープニング ================= */
+const BEAT=60/128,BAR=BEAT*4,OP_LEN=30;
+const LSTART=LYR.map((_,i)=>(2+2*i)*BAR);
+const LSUNG=LYR.map(l=>{let d=0;l.m.forEach(([m,x])=>d+=x);const tail=l.m[l.m.length-1];if(!tail[0])d-=tail[1];return d*BEAT;});
+const FLASHES=[1.875,3.75,7.5,11.25,15,18.75,22.5,26.25];
+let op=null;
+function fillOP(){
+  $('opMio').innerHTML=charSVG('mio','smile');
+  $('opMioEye').innerHTML=charSVG('mio','normal','128 176 144 70','xMidYMid slice');
+  $('opRoof').innerHTML=bgRoof();
+  $('opTouka').innerHTML=charSVG('touka','cool');
+  $('opMioFace').innerHTML=charSVG('mio','happy','92 50 216 260','xMidYMid slice');
+  $('opToukaFace').innerHTML=charSVG('touka','blush','92 50 216 260','xMidYMid slice');
+  $('opSlope').innerHTML=bgSlope('morning');
+  $('opSunset').innerHTML=bgSlope('sunset');
+  $('opSilM').innerHTML=charSVG('mio','normal');
+  $('opSilT').innerHTML=charSVG('touka','normal');
+  $('opMio2').innerHTML=charSVG('mio','happy');
+  $('opTouka2').innerHTML=charSVG('touka','smile');
+  $('opHill').innerHTML=silhouettes();
+}
+const cv=$('stars'),cx2=cv.getContext('2d');
+const STARS=Array.from({length:170},()=>({x:Math.random()*640,y:Math.random()*480,r:Math.random()*1.4+.3,p:Math.random()*6.28,s:Math.random()*2+1}));
+let meteors=[];
+function drawStars(t,dt){
+  const g=cx2.createLinearGradient(0,0,0,480);g.addColorStop(0,'#02031a');g.addColorStop(1,'#14205a');cx2.fillStyle=g;cx2.fillRect(0,0,640,480);
+  for(const s of STARS){const a=.45+.55*Math.sin(t*s.s+s.p);cx2.fillStyle=`rgba(255,250,230,${Math.max(.1,a)})`;cx2.fillRect(s.x,(s.y-t*4+480)%480,s.r*1.6,s.r*1.6);}
+  const shower=t>22.5&&t<26.25,rate=shower?.5:(t>3.75&&t<7.5?.05:.012);
+  if(Math.random()<rate)meteors.push({x:200+Math.random()*520,y:-10+Math.random()*120,v:420+Math.random()*300,l:0});
+  cx2.lineCap='round';
+  meteors=meteors.filter(m=>{m.l+=dt;m.x-=m.v*dt*.87;m.y+=m.v*dt*.5;const a=Math.max(0,1-m.l/1.1);
+    const gr=cx2.createLinearGradient(m.x,m.y,m.x+90,m.y-52);gr.addColorStop(0,`rgba(255,255,255,${a})`);gr.addColorStop(1,'rgba(255,220,160,0)');
+    cx2.strokeStyle=gr;cx2.lineWidth=2;cx2.beginPath();cx2.moveTo(m.x,m.y);cx2.lineTo(m.x+90,m.y-52);cx2.stroke();return m.l<1.1;});
+}
+function startOP(){
+  show('op');initAudio();fillOP();meteors=[];
+  const st=playSong('op',false);
+  op={st,t0:performance.now()/1000+.12,last:0,fl:new Set(),raf:0};
+  for(const c of document.querySelectorAll('#op .cut'))c.classList.remove('on');
+  $('whiteout').style.opacity=0;
+  op.raf=requestAnimationFrame(opFrame);
+}
+function opTime(){return (op.st&&AU.ctx)?AU.ctx.currentTime-op.st.t0:performance.now()/1000-op.t0;}
+const lrows=[...document.querySelectorAll('.lrow')].map(r=>({el:r,base:r.querySelector('.base'),fill:r.querySelector('.fill'),cur:-1}));
+function opFrame(){
+  if(!op)return;
+  const t=opTime(),dt=Math.min(.05,Math.max(0,t-op.last));op.last=t;
+  for(const c of document.querySelectorAll('#op .cut')){const on=t>=+c.dataset.s&&t<+c.dataset.e;if(on!==c.classList.contains('on'))c.classList.toggle('on',on);}
+  FLASHES.forEach(f=>{if(t>=f&&!op.fl.has(f)){op.fl.add(f);const el=$('flash');el.classList.remove('go');void el.offsetWidth;el.classList.add('go');}});
+  // カラオケ: 2段交互表示
+  lrows.forEach((r,k)=>{
+    let idx=-1;for(let i=k;i<LYR.length;i+=2){const appear=i===0?3.3:LSTART[i-1];if(t>=appear)idx=i;}
+    if(t>LSTART[5]+2*BAR-.1||t<3.3)idx=-1;
+    if(idx!==r.cur){r.cur=idx;r.base.textContent=r.fill.textContent=idx<0?'':LYR[idx].t;}
+    if(idx>=0){const p=Math.min(1,Math.max(0,(t-LSTART[idx])/LSUNG[idx]));r.fill.style.clipPath=`inset(0 ${(100-p*100).toFixed(1)}% 0 0)`;}
+  });
+  drawStars(t,dt);
+  $('whiteout').style.opacity=t>29.2?Math.min(1,(t-29.2)/.8):0;
+  $('optime').textContent=`${String(Math.max(0,Math.floor(t))).padStart(2,'0')} / 30`;
+  if(t>=OP_LEN){endOP(false);return;}
+  op.raf=requestAnimationFrame(opFrame);
+}
+function endOP(skipped){if(!op)return;cancelAnimationFrame(op.raf);op=null;if(skipped)stopSong();toTitle();}
+$('skip').onclick=e=>{e.stopPropagation();endOP(true);};
+
+/* ================= タイトル ================= */
+function toTitle(){
+  show('title');$('titleBg').innerHTML=bgSlope('sunset');
+  if(AU.ctx&&(!AU.cur||AU.cur.s!==SONGS.title))playSong('title');
+  $('bStart').focus({preventScroll:true});
+}
+$('bStart').onclick=e=>{e.stopPropagation();se('select');startGame();};
+$('bOP').onclick=e=>{e.stopPropagation();startOP();};
+$('title').addEventListener('click',()=>{});
+
+/* ================= 本編エンジン ================= */
+const NAMES={ミオ:'mio',冬華:'touka',ユウキ:'yuki'};
+const POS={left:20,center:170,right:320};
+const SCRIPT=[
+  {bg:'black'},
+  {narr:'――七年ぶりに帰ってきた、この街。'},
+  {bg:'slope'},{bgm:'day'},
+  {narr:'星見坂（ほしみざか）。海へとくだる長い坂道と、春になると満開になる桜並木。'},
+  {narr:'子どものころ毎日のぼったこの坂を、今日からまた、制服で歩く。'},
+  {say:'ユウキ',text:'……変わってないな、ここは。'},
+  {say:'？？？',text:'どいてどいてどいてーーっ！！'},
+  {fx:'shake'},
+  {show:'mio',expr:'surprise',pos:'center'},
+  {say:'？？？',text:'いったぁ～……。ご、ごめんなさいっ！　遅刻しそうで、前見てなくて……'},
+  {say:'ユウキ',text:'いや、こっちこそ。……ん？　その黄色いリボン……'},
+  {show:'mio',expr:'normal'},
+  {say:'？？？',text:'え……？　あれ、もしかして……'},
+  {show:'mio',expr:'happy'},
+  {say:'？？？',text:'ユウくん!?　ユウくんだよね!?　わたし、ミオだよ！　朝比奈ミオ！'},
+  {narr:'朝比奈ミオ。家がとなりどうしで、毎日いっしょに遊んでいた幼なじみ。'},
+  {narr:'七年前、引っ越しの日に泣きながら手をふっていた女の子が――'},
+  {show:'mio',expr:'blush'},
+  {say:'ミオ',text:'えへへ……おかえりなさい、ユウくん。ずーっと、待ってたんだから。'},
+  {say:'ユウキ',text:'ただいま、ミオ。……って、遅刻するんじゃなかったのか？'},
+  {show:'mio',expr:'surprise'},
+  {say:'ミオ',text:'あああっ！　そうだった！　ほら、ユウくんも走って！　始業式はじまっちゃう！'},
+  {hide:'all'},
+  {bg:'classroom'},
+  {narr:'――二年B組。転校生の自己紹介は、なんとか無事に終わった。'},
+  {show:'mio',expr:'smile',pos:'left'},
+  {say:'ミオ',text:'まさかユウくんと同じクラスなんて！　これって運命かも、なーんて♪'},
+  {say:'？？？',text:'朝比奈さん。ホームルーム中よ、静かにして。'},
+  {show:'touka',expr:'cool',pos:'right'},
+  {show:'mio',expr:'pout'},
+  {say:'ミオ',text:'うっ……ごめんなさい、委員長……'},
+  {say:'？？？',text:'あなたが転校生の相沢くんね。クラス委員長の綾瀬冬華です。'},
+  {say:'冬華',text:'わからないことがあれば聞いて。……ただし、浮ついた話はお断りよ。'},
+  {say:'ユウキ',text:'（クールな子だな……。でも、どこかで会ったような……？）'},
+  {show:'touka',expr:'normal'},
+  {say:'冬華',text:'……何？　人の顔をじっと見て。'},
+  {say:'ユウキ',text:'あ、いや、なんでもない。よろしく、綾瀬さん。'},
+  {show:'mio',expr:'smile'},
+  {say:'ミオ',text:'ねえねえユウくん、知ってる？　この学校の「星降りの伝説」！'},
+  {say:'ミオ',text:'この夏、三十年ぶりの流星群がくるの。その夜、坂のてっぺんで想いを伝えると――'},
+  {show:'mio',expr:'blush'},
+  {say:'ミオ',text:'ふたりは、永遠に結ばれるんだって……♪'},
+  {show:'touka',expr:'cool'},
+  {say:'冬華',text:'……くだらない。ただの言い伝えよ。'},
+  {narr:'そう言いながら、委員長は窓の外の空を、少しだけ長く見つめていた。'},
+  {hide:'all'},
+  {bg:'classroom_evening'},
+  {narr:'――そして、放課後。'},
+  {narr:'窓の外は、もう夕焼けに染まりはじめている。'},
+  {choice:[{text:'ミオといっしょに帰る',jump:'mio'},{text:'屋上へ行ってみる',jump:'touka'}]},
+
+  {label:'mio'},
+  {bg:'slope_sunset'},
+  {show:'mio',expr:'smile',pos:'center'},
+  {say:'ミオ',text:'こうしてふたりで坂をくだるの、七年ぶりだね。'},
+  {say:'ユウキ',text:'ミオ、昔はここで転んでよく泣いてたよな。'},
+  {show:'mio',expr:'pout'},
+  {say:'ミオ',text:'も、もう泣かないもん！　……ユウくんがいなくなったときは、いっぱい泣いたけど。'},
+  {show:'mio',expr:'blush'},
+  {say:'ミオ',text:'ねえ、ユウくん。夏の流星群……いっしょに見に行ってくれる？'},
+  {say:'ユウキ',text:'ああ。約束する。'},
+  {show:'mio',expr:'happy'},
+  {say:'ミオ',text:'ほんと!?　やったぁ！　約束だよ、ぜったいだからね！'},
+  {jump:'end'},
+
+  {label:'touka'},
+  {bg:'rooftop'},
+  {narr:'屋上の扉を開けると、夕陽の中にひとりの少女がいた。'},
+  {show:'touka',expr:'surprise',pos:'center'},
+  {say:'冬華',text:'相沢くん……？　どうしてここに。'},
+  {say:'ユウキ',text:'なんとなく、空が見たくて。それ……望遠鏡？'},
+  {show:'touka',expr:'normal'},
+  {say:'冬華',text:'天文部の備品よ。部員はわたしひとりだけど。'},
+  {say:'冬華',text:'このままだと廃部なの。夏の流星群をここで観測するまでは……終わらせたくない。'},
+  {say:'ユウキ',text:'じゃあ、俺が入るよ。天文部。'},
+  {show:'touka',expr:'blush'},
+  {say:'冬華',text:'え……？　……べ、別に頼んでないわ。'},
+  {show:'touka',expr:'smile'},
+  {say:'冬華',text:'……でも。ありがとう。入部届、明日持ってきて。'},
+  {narr:'はじめて見た彼女の笑顔は、一番星みたいに小さくて、きれいだった。'},
+
+  {label:'end'},
+  {hide:'all'},
+  {bg:'night'},{bgm:'title'},
+  {narr:'――星見坂の空に、ひとすじの流れ星。'},
+  {narr:'この春から始まる物語の行き先を、まだ誰も知らない。'},
+  {endcard:true},
+];
+const LABELS={};SCRIPT.forEach((c,i)=>{if(c.label)LABELS[c.label]=i;});
+let ip=0,typing=null,typingFull='',mode='text';
+function setBG(key){
+  const box=$('bgs'),d=document.createElement('div');d.className='bg';d.style.opacity=0;
+  const M={black:'<svg viewBox="0 0 640 480"><rect width="640" height="480" fill="#000"/></svg>',slope:bgSlope('morning'),slope_sunset:bgSlope('sunset'),
+    classroom:bgClass(false),classroom_evening:bgClass(true),rooftop:bgRoof(),night:bgNight(true)};
+  d.innerHTML=M[key];
+  if(key==='slope'||key==='slope_sunset'||key==='classroom'){for(let i=0;i<16;i++){const p=document.createElement('div');p.className='petal';
+    p.style.left=(80+Math.random()*600)+'px';p.style.animationDuration=(5+Math.random()*4)+'s';p.style.animationDelay=(-Math.random()*8)+'s';d.appendChild(p);}}
+  if(key==='night'){for(let i=0;i<2;i++){const s=document.createElement('div');s.className='shoot';s.style.animationDelay=(i*2.1)+'s';d.appendChild(s);}}
+  box.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity=1;}));
+  const old=[...box.children].filter(x=>x!==d);setTimeout(()=>old.forEach(o=>o.remove()),800);
+}
+function showChar(id,expr,pos){
+  let el=document.querySelector(`.spr[data-id="${id}"]`);
+  if(!el){el=document.createElement('div');el.className='spr';el.dataset.id=id;el.style.left=POS[pos||'center']+'px';$('chars').appendChild(el);}
+  else if(pos)el.style.left=POS[pos]+'px';
+  if(el.dataset.expr!==expr){el.dataset.expr=expr;el.innerHTML=charSVG(id,expr);}
+}
+function hideChar(id){for(const el of document.querySelectorAll('.spr'))if(id==='all'||el.dataset.id===id)el.remove();}
+function say(name,text){
+  const nm=$('name');$('win').hidden=false;
+  if(name){nm.hidden=false;nm.textContent=name;nm.className=NAMES[name]||'';}else nm.hidden=true;
+  const tx=$('text');tx.textContent='';let i=0;
+  clearInterval(typing);typing=setInterval(()=>{i++;tx.textContent=text.slice(0,i);if(i>=text.length)finishType(text);},32);
+  typingFull=text;
+}
+function finishType(text){clearInterval(typing);typing=null;const tx=$('text');tx.textContent=text;const c=document.createElement('span');c.id='cursor';c.textContent='▼';tx.appendChild(c);}
+function run(){
+  while(ip<SCRIPT.length){
+    const c=SCRIPT[ip++];
+    if(c.label)continue;
+    if(c.bg){setBG(c.bg);continue;}
+    if(c.bgm){if(AU.ctx)playSong(c.bgm);continue;}
+    if(c.fx==='shake'){const g=$('game');g.classList.remove('shake');void g.offsetWidth;g.classList.add('shake');se('hit');continue;}
+    if(c.show){showChar(c.show,c.expr||'normal',c.pos);continue;}
+    if(c.hide){hideChar(c.hide);continue;}
+    if(c.jump){ip=LABELS[c.jump];continue;}
+    if(c.say||c.narr){say(c.say||'',c.say?c.text:c.narr);return;}
+    if(c.choice){mode='choice';const box=$('choices');box.innerHTML='';
+      c.choice.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='cbtn';b.textContent=o.text;
+        b.onclick=e=>{e.stopPropagation();se('select');box.hidden=true;mode='text';ip=LABELS[o.jump];run();};box.appendChild(b);});
+      box.hidden=false;box.querySelector('button').focus({preventScroll:true});return;}
+    if(c.endcard){mode='end';$('win').hidden=true;$('endcard').hidden=false;return;}
+  }
+}
+function advance(){
+  if(mode==='choice')return;
+  if(mode==='end'){toTitle();return;}
+  if(typing){finishType(typingFull);return;}
+  run();
+}
+function startGame(){
+  show('game');$('bgs').innerHTML='';hideChar('all');$('choices').hidden=true;$('endcard').hidden=true;$('win').hidden=false;
+  $('text').textContent='';$('name').hidden=true;stopSong();ip=0;mode='text';run();
+}
+$('game').addEventListener('click',advance);
+$('toTitle').onclick=e=>{e.stopPropagation();clearInterval(typing);typing=null;toTitle();};
+
+/* ================= 起動 ================= */
+$('boot').addEventListener('click',()=>{initAudio();startOP();});
+addEventListener('keydown',e=>{
+  const vis=[...document.querySelectorAll('.screen')].find(s=>!s.hidden);if(!vis)return;
+  if(vis.id==='boot'&&(e.key==='Enter'||e.key===' ')){e.preventDefault();initAudio();startOP();}
+  else if(vis.id==='op'&&(e.key==='Escape'||e.key==='Enter')){e.preventDefault();endOP(true);}
+  else if(vis.id==='game'&&(e.key==='Enter'||e.key===' ')&&mode!=='choice'){e.preventDefault();advance();}
+});
+</script>
+</body>
+</html>

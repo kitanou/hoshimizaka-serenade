@@ -48,7 +48,7 @@ label day3_misaki:
     scene bg slope_night with fade
     play music audio.misaki fadein 1.5
     "夜の星見坂。街灯がぽつりぽつりと、海まで続いている。"
-    "坂のてっぺんに、見覚えのある二つ結びのシルエットがあった。"
+    "坂のてっぺんに、見覚えのあるショートボブのシルエットがあった。"
     show misaki sad at pos_c with dissolve
     mi "……来てくれたんだ。"
     yu "探したよ。今朝のこと、ごめん。ちゃんと答えられなくて。"

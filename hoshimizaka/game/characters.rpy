@@ -8,7 +8,7 @@ define ka = Character("楓", image="kaede", namebox_background=Frame("gui/namebo
 define mq = Character("？？？", image="misaki", namebox_background=Frame("gui/namebox_unknown.png", gui.namebox_borders, tile=gui.namebox_tile))
 define q = Character("？？？", namebox_background=Frame("gui/namebox_unknown.png", gui.namebox_borders, tile=gui.namebox_tile))
 
-## ---- 表情プリセット ----
+## ---- 表情プリセット（冬華・楓の layeredimage 用。ミサキは 1 枚絵）----
 ## 脚本では `mi happy "…"` のように 1 語で書く。ここで 目/口/眉/頬 の 4 グループすべてに展開する。
 ## （どれかを省くと直前の表情の属性が残るため、必ず 4 つ指定すること）
 init python:
@@ -39,6 +39,6 @@ init python:
             return tuple(out)
         return adjust
 
-    config.adjust_attributes["misaki"] = _make_adjust(_BASE)
+    # ミサキは表情ごとの 1 枚絵（images.rpy）なので展開しない
     config.adjust_attributes["kaede"] = _make_adjust(_BASE)
     config.adjust_attributes["touka"] = _make_adjust(_TOUKA)

@@ -552,3 +552,11 @@ layeredimage misaki:
 - `route_misaki` / `route_touka` / `route_normal`: 3 エンディングに到達し、`persistent.endings_seen` を確認（T2）
 - `ui_screens`: 設定・セーブ・ログ・おまけ画面
 - `save_load`: 変数を保存→書き換え→ロードで復元（T3）
+
+### 14.4 ミサキの立ち絵の差し替え
+
+ミサキは、手続き生成の二つ結びから、参考画像 `docs/images/character-misaki.webp`（ショートボブ・眼鏡・赤いリボン）に差し替えた。
+
+- `tools/import_misaki.py` が、表情6種（通常・微笑・照れ・驚き・悲しみ・怒り）のバストアップを切り出して透過し、600×900 の透明キャンバスに下揃えで置く。
+- 参考画像は差分レイヤーを持たないので、ミサキだけ layeredimage ではなく表情ごとの1枚絵（`images.rpy`）。`happy`→微笑、`pout`→怒り、`closed`→照れ、`cool`→通常 の別名で既存の脚本を変えずに使える。まばたきはない。
+- 脚本の「黄色いリボン」を「赤いリボン」に、「二つ結び」を「ショートボブ」に直した。OP の顔・目のアップ（`op_face_zoom_m` / `op_eye_zoom_m`）とミサキの CG も差し替えた。

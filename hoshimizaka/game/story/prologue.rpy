@@ -23,7 +23,7 @@ label prologue:
     show misaki surprise at pos_c with dissolve
 
     mq "いったぁ～……。ご、ごめんなさいっ！　遅刻しそうで、前見てなくて……"
-    yu "いや、こっちこそ。……ん？　その黄色いリボン……"
+    yu "いや、こっちこそ。……ん？　その赤いリボン……"
 
     mq normal "え……？　あれ、もしかして……"
     mq happy "ユウくん!?　ユウくんだよね!?　わたし、ミサキだよ！　朝比奈ミサキ！"

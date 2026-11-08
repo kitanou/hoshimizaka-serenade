@@ -41,6 +41,8 @@ def gen_backgrounds():
 
 def gen_sprites():
     for cid in C.CH:
+        if cid == "misaki":
+            continue  # ミサキは参考画像から切り出す（tools/import_misaki.py）
         for name, svg in C.layers(cid).items():
             svg_to_image(svg, 600, 900).save(out(f"images/chars/{cid}/{name}.png"), optimize=True)
         print("chars", cid)
@@ -52,6 +54,10 @@ def paste_center(base, im, cx, y):
 
 def gen_cg():
     def char(cid, scale, **kw):
+        if cid == "misaki":
+            expr = "smile" if kw.get("eyes") != "happy" else "smile"
+            im = Image.open(os.path.join(IMG, "chars", "misaki", f"bust_{expr}.png")).convert("RGBA")
+            return im.resize((int(600 * scale), int(900 * scale)), Image.LANCZOS)
         im = svg_to_image(C.flat(cid, **kw), 600, 900)
         return im.resize((int(600 * scale), int(900 * scale)), Image.LANCZOS)
 

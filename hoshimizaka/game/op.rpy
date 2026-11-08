@@ -83,6 +83,14 @@ transform op_face_zoom:
     anchor (0.5, 0.3) pos (320, 250) zoom 2.7
     ease 0.9 zoom 2.4
 
+transform op_face_zoom_m:
+    anchor (0.5, 0.5) pos (320, 250) zoom 2.1
+    ease 0.9 zoom 1.9
+
+transform op_eye_zoom_m:
+    anchor (0.5, 0.575) pos (320, 280) zoom 5.2
+    ease 1.8 zoom 4.7
+
 transform op_eye_zoom:
     anchor (0.5, 0.351) pos (320, 280) zoom 6.6
     ease 1.8 zoom 5.9
@@ -336,7 +344,7 @@ label op:
         jump op_done
     scene black
     show expression Image("images/op/speed.png") as speed at at_xy(-330, -410)
-    show misaki normal at op_eye_zoom
+    show misaki normal at op_eye_zoom_m
     with None
 
     ## 11.25  屋上・冬華
@@ -358,7 +366,7 @@ label op:
     $ op_flash()
     scene black
     show expression Image("images/op/halftone_y.png") as ht
-    show misaki happy at op_face_zoom
+    show misaki happy at op_face_zoom_m
     $ op_lyric(4)
 
     ## 15.94  冬華の顔

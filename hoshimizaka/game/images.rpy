@@ -21,16 +21,67 @@ image cg normal_end = Transform("images/cg/normal_end.png", zoom=0.5)
 
 ## ---- 立ち絵 ----
 
-image misaki normal = At("images/chars/misaki/bust_normal.png", char_zoom)
-image misaki smile = At("images/chars/misaki/bust_smile.png", char_zoom)
-image misaki blush = At("images/chars/misaki/bust_blush.png", char_zoom)
-image misaki surprise = At("images/chars/misaki/bust_surprise.png", char_zoom)
-image misaki sad = At("images/chars/misaki/bust_sad.png", char_zoom)
-image misaki angry = At("images/chars/misaki/bust_angry.png", char_zoom)
-image misaki happy = At("images/chars/misaki/bust_smile.png", char_zoom)
-image misaki pout = At("images/chars/misaki/bust_angry.png", char_zoom)
-image misaki closed = At("images/chars/misaki/bust_blush.png", char_zoom)
-image misaki cool = At("images/chars/misaki/bust_normal.png", char_zoom)
+image misaki_eyes_open:
+    "images/chars/misaki/eyes_open.png"
+    choice:
+        3.2
+    choice:
+        4.4
+    choice:
+        5.2
+    "images/chars/misaki/eyes_closed.png"
+    0.12
+    repeat
+
+layeredimage misaki:
+    at char_zoom
+
+    always "images/chars/misaki/base_back.png"
+
+    group eyes:
+        attribute e_open default:
+            "misaki_eyes_open"
+        attribute e_happy:
+            "images/chars/misaki/eyes_happy.png"
+        attribute e_surprise:
+            "images/chars/misaki/eyes_surprise.png"
+        attribute e_pout:
+            "images/chars/misaki/eyes_pout.png"
+        attribute e_closed:
+            "images/chars/misaki/eyes_closed.png"
+
+    group mouth:
+        attribute m_neutral default:
+            "images/chars/misaki/mouth_neutral.png"
+        attribute m_smile:
+            "images/chars/misaki/mouth_smile.png"
+        attribute m_happy:
+            "images/chars/misaki/mouth_happy.png"
+        attribute m_surprise:
+            "images/chars/misaki/mouth_surprise.png"
+        attribute m_pout:
+            "images/chars/misaki/mouth_pout.png"
+        attribute m_cool:
+            "images/chars/misaki/mouth_cool.png"
+
+    group cheek:
+        attribute no_blush default null
+        attribute blush:
+            "images/chars/misaki/blush.png"
+
+    always "images/chars/misaki/base_front.png"
+
+    group brows:
+        attribute b_normal default:
+            "images/chars/misaki/brows_normal.png"
+        attribute b_cool:
+            "images/chars/misaki/brows_cool.png"
+        attribute b_up:
+            "images/chars/misaki/brows_up.png"
+        attribute b_angry:
+            "images/chars/misaki/brows_angry.png"
+        attribute b_sad:
+            "images/chars/misaki/brows_sad.png"
 
 image touka_eyes_open:
     "images/chars/touka/eyes_open.png"

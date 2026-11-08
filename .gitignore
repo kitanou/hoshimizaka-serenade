@@ -14,3 +14,6 @@ __pycache__/
 *.pyc
 .venv/
 .DS_Store
+# 画像生成（Issue #65）: ComfyUI 本体と生成物はコミットしない。手順は docs/image-generation.md
+ComfyUI/
+output/

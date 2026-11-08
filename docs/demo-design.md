@@ -559,7 +559,7 @@ layeredimage misaki:
 ミサキは、手続き生成の二つ結びから、参考画像 `docs/images/character-misaki.webp`（ショートボブ・眼鏡・赤いリボン）に差し替えた。
 
 - `tools/import_misaki.py` が、表情6種（通常・微笑・照れ・驚き・悲しみ・怒り）のバストアップを切り出して透過し、600×900 の透明キャンバスに下揃えで置く。
-- 参考画像は差分レイヤーを持たないので、ミサキだけ layeredimage ではなく表情ごとの1枚絵（`images.rpy`）。`happy`→微笑、`pout`→怒り、`closed`→照れ、`cool`→通常 の別名で既存の脚本を変えずに使える。まばたきはない。
+- ~~参考画像は差分レイヤーを持たないので、ミサキだけ layeredimage ではなく表情ごとの1枚絵~~ → **§14.6 でパーツ差分化し、他の2人と同じ layeredimage になった。**
 - 脚本の「黄色いリボン」を「赤いリボン」に、「二つ結び」を「ショートボブ」に直した。OP の顔・目のアップ（`op_face_zoom_m` / `op_eye_zoom_m`）とミサキの CG も差し替えた。
 
 ### 14.5 OP を絵コンテに合わせて作り直し（docs/op-storyboard.md）
@@ -576,3 +576,17 @@ layeredimage misaki:
   - 歌詞字幕のフォントはドット系ではなく、同梱の Source Han Sans Lite。
   - 「体験版 ver.0.96」ではなく ver.0.97 と表示した。
   - `bg_op_railway_crossing` / `telescope_sky` / `meteor_shower` は、どのカットでも使わないので作っていない。
+
+### 14.6 ミサキのパーツ差分（layeredimage 化。Issue #65）
+
+§7.1 の構造（base_back → 目・口・頬 → base_front → 眉）で、ミサキの立ち絵パーツを ComfyUI で生成した。手順・設定は `docs/image-generation.md`。
+
+- **基準**: 参考画像「通常」バストを canny 固定の img2img で清書した1枚（`tools/comfy_gen.py`）。パーツはすべてこの基準の上で、部位マスク（目・口・眉）だけを inpaint して作る（`tools/misaki_parts.py`）。同じ基準から作るので、目・口・眉をどう組み合わせても顔がずれない。
+- **ファイル**: `images/chars/misaki/` に `base_back` / `base_front` / `eyes_{open,happy,surprise,pout,closed}` / `mouth_{neutral,smile,happy,surprise,pout,cool}` / `brows_{normal,cool,up,angry,sad}` / `blush`（600×900、他の2人と同じ規約）。種類は `tools/svg/chars.py` の `*_KINDS` と同じ。
+- **既定のパーツは透明**（`eyes_open` / `mouth_neutral` / `brows_normal`）。基準画像の目・口・眉がそのまま見える。基準画素で埋めると、上に重なる眉レイヤーが閉じ目の上に開いた目を描き戻してしまう。
+- **base_front は眼鏡フレーム**（基準から抽出）。目の差分が眼鏡を描き替えても上から戻す。まつ毛と重なる箇所は抽出から外し、目の差分側に任せる。
+- **頬染め**はセル画風の斜線を手続き描画。
+- **ラスター化**: 全レイヤーで同じパレット（64色）・同じ Bayer 格子を使い、各レイヤーには基準と違う画素だけを残す。base_back に重ねた結果は、生成画像をラスター化したものと画素単位で一致する。
+- **まばたき**: 他の2人と同じ `misaki_eyes_open`（`eyes_open` ↔ `eyes_closed`）。
+- `images.rpy` のミサキの1枚絵宣言はやめ、`gen_rpy` で他の2人と同じ layeredimage を出力する。表情プリセットは `characters.rpy` の `_BASE` で4グループに展開する（`config.adjust_attributes["misaki"]`）。
+- 表情ごとの1枚絵 `bust_*.png` は CG 生成（`tools/gen_images.py`）が使うので残す。

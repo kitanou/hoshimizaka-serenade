@@ -70,7 +70,22 @@ TOUKA_NEG = ("lowres, bad anatomy, bad hands, text, error, cropped, worst qualit
              "pink hair, blonde hair, short hair, twintails, ponytail, high contrast, heavy shadow, thick outlines, "
              "light blue collar, multiple girls, speech bubble, nsfw, sparkle eyes, star pupils")
 
-SHRINK = 0.78   # 頭・髪が切れないよう、両キャラを同じ比率で縮める（ミサキを基準に顔の大きさは 2 人でそろえたまま）
+# 楓も参考画像がないので冬華と同じ手順（txt2img + 弱い IP-Adapter）。デザイン元は tools/svg/chars.py の kaede
+# （橙の bob、緑の目、丸眼鏡、緑のリボン、黄色の髪留め）。
+KAEDE_CHAR = ("1girl, solo, (orange hair:1.5), (bright orange hair:1.3), short hair, bob cut, blunt bangs, sidelocks, "
+              "(yellow hairpin:1.2), hair ornament, (green eyes:1.3), large eyes, cheerful, friendly, "
+              "(round eyewear:1.4), (round glasses:1.3), (thin-framed eyewear:1.2), "
+              "serafuku, white shirt, short sleeves, (navy blue sailor collar:1.3), white stripes, "
+              "(green bowtie:1.4), (green neck ribbon:1.2)")
+KAEDE_NEG = ("lowres, bad anatomy, bad hands, text, error, cropped, worst quality, low quality, jpeg artifacts, "
+             "signature, watermark, blurry, 3d, photorealistic, chromatic aberration, "
+             "pink hair, blonde hair, brown hair, black hair, dark hair, grey hair, white hair, blue hair, "
+             "purple hair, red hair, green hair, long hair, very long hair, hime cut, twintails, ponytail, "
+             "wavy hair, curly hair, square eyewear, cat-eye eyewear, thick-framed eyewear, oversized glasses, "
+             "sunglasses, red bowtie, red ribbon, red necktie, light blue collar, multiple girls, speech bubble, "
+             "nsfw, smile, open mouth, sparkle eyes, star pupils, high contrast, heavy shadow, thick outlines")
+
+SHRINK = 0.78   # 頭・髪が切れないよう、全キャラを同じ比率で縮める（ミサキを基準に顔の大きさはそろえたまま）
 PAD = (160, 130)  # アウトペイントで描き足す余白（左右 px, 上 py）。下は足さない（バストの下端は切れてよい）
 
 CONFIGS = {
@@ -92,11 +107,40 @@ CONFIGS = {
               ("brows", "up"): "(raised eyebrows:1.2), surprised"},
         denoise={("brows", "up"): 0.75, ("eyes", "pout"): 0.75},
     ),
+    "kaede": dict(
+        work="parts_kaede", game="kaede",
+        base_src="output/kaede/base.png",          # 基準バスト（基準生成は docs/image-generation.md の楓の項）
+        quant="octree",                            # 瞳の濃い緑が MEDIANCUT の 64 色パレットから落ちる（虹彩が navy 化）ため
+        # 丸眼鏡（seed 6 の基準画像で目視計測）。frame 抽出と eye マスクからの除外に使う
+        lens=((320, 347, 78, 90), (508, 341, 79, 90), (394, 296, 434, 340)),
+        pale_fringe=False,
+        positive=lambda tags: ", ".join([G.QUALITY, TOUKA_STYLE, KAEDE_CHAR, TOUKA_FRAME, tags]),
+        negative=KAEDE_NEG, cheek_rgb=(236, 120, 140),
+        regions={"brows": ((252, 252, 592, 312), 6), "eyes": ((235, 285, 600, 462), 10),
+                 "mouth": ((395, 462, 512, 538), 8)},
+        cheeks=[(250, 388, 335, 452), (498, 382, 582, 446)],
+        # フレームの上半分がまつ毛と重なる帯＋こめかみのテンプル（復元せず目の差分側に任せる）
+        lash_zones=[(262, 258, 392, 302), (452, 250, 578, 315), (225, 320, 258, 380), (585, 315, 622, 372),
+                    (378, 318, 405, 355)],
+        sheet_crop=(30, 250, 570, 640),
+        # ミサキ・冬華と画面で見栄えを合わせる。eye_to/eye_from/eye_to の式は冬華と同じ（目は同じ位置に着く）。
+        # ただし冬華の zoom は目幅ベースで、大きく描いた楓の顔が 1.3 倍ほど大きくなった。
+        # trio 比較で顔幅が 0.8 倍になるよう zoom×shrink を下げた（build 後に trio で再確認）
+        fit=dict(zoom=416 / 340, eye_from=(277, 279), eye_to=(278, 412), shrink=SHRINK),
+        tags={("eyes", "pout"): "(half-closed eyes:1.6), (glaring:1.5), (jitome:1.4), annoyed, narrowed eyes",
+              ("brows", "up"): "(raised eyebrows:1.2), surprised",
+              # 緑の瞳＋巨大な目なので happy が片目開け（wink 化）しやすい。closed はまつ毛帯で覆う（ミサキの closed にあわせる）
+              ("eyes", "happy"): "(closed eyes:1.8), (both eyes closed:1.6), (^_^:1.6), happy eyes, smile, happy",
+              ("eyes", "closed"): "(closed eyes:2.0), (both eyes closed:1.9), serene, calm, sleeping, (eyelids:1.2)"},
+        denoise={("brows", "up"): 0.75, ("eyes", "pout"): 0.8, ("eyes", "happy"): 0.95, ("eyes", "closed"): 0.95},
+        neg_extra={("eyes", "closed"): "(open eyes:1.6), (wide eyes:1.5), pupils, irises"},
+    ),
 }
 CHAR_NAME = "misaki"
 POSITIVE = None      # tags → Positive 全文（None なら comfy_gen の美咲用ブロック）
 NEGATIVE = None
 BASE_SRC = None      # 設定時はこの画像を基準として使い、ComfyUI で基準を作らない
+QUANT = "mediancut"  # パレット抽出法。楓のように一部だけ濃い緑のキャラは MEDIANCUT だと緑枠が消えるため octree を使う
 PALE_FRINGE = True   # 参考シートの印刷オフセット（薄青いフチ）を白扱いにする（美咲のみ）
 CHEEK_RGB = (236, 110, 130)
 FIT = None                          # キャラ間のサイズ合わせ（use() が設定）
@@ -106,10 +150,11 @@ SHEET_CROP = (60, 260, 540, 620)   # 確認シートで切り出す顔まわり�
 def use(char):
     """キャラ設定をモジュール定数へ反映する。"""
     global WORK, GAME_DIR, CHAR_NAME, POSITIVE, NEGATIVE, BASE_SRC, PALE_FRINGE, CHEEK_RGB
-    global LENS_L, LENS_R, REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP, FIT
+    global LENS_L, LENS_R, BRIDGE, REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP, FIT, QUANT
     c = CONFIGS[char]
     CHAR_NAME = char
     FIT, SHEET_CROP = c.get("fit"), c["sheet_crop"]
+    QUANT = c.get("quant", "mediancut")
     if "work" not in c:   # 美咲: 既定値のまま（FIT / SHEET_CROP だけ上で設定）
         return
     WORK = os.path.join(ROOT, "output", c["work"])
@@ -118,12 +163,16 @@ def use(char):
     POSITIVE, NEGATIVE, PALE_FRINGE, CHEEK_RGB = c["positive"], c["negative"], c["pale_fringe"], c["cheek_rgb"]
     if c["lens"] is None:
         LENS_L = LENS_R = None
+    else:                                   # (LENS_L, LENS_R, BRIDGE) を渡せる（楓の丸眼鏡）
+        LENS_L, LENS_R, BRIDGE = c["lens"]
     REGIONS, CHEEKS, LASH_ZONES, SHEET_CROP = c["regions"], c["cheeks"], c["lash_zones"], c["sheet_crop"]
     FIT = c.get("fit")
     for (part, kind), t in c.get("tags", {}).items():
         TAGS[part][kind] = t
     for (part, kind), d in c.get("denoise", {}).items():
         DENOISE_KIND[(part, kind)] = d
+    for (part, kind), n in c.get("neg_extra", {}).items():
+        NEG_EXTRA_KIND[(part, kind)] = n
 
 
 # 各差分の inpaint 用タグ（表情タグのみ。キャラ・画風は comfy_gen と共通）
@@ -153,6 +202,7 @@ TAGS = {
 }
 # 部位別に Negative へ足すタグ（片目だけ閉じるウインクを防ぐ）
 NEG_EXTRA = {"eyes": "(wink:1.4), (one eye closed:1.4)"}
+NEG_EXTRA_KIND = {}   # (部位, 種類) ごとの追加 Negative
 DENOISE = {"eyes": 0.85, "mouth": 0.85, "brows": 0.9}
 DENOISE_KIND = {}   # (部位, 種類) ごとの上書き
 KINDS = {"eyes": EYE_KINDS, "mouth": MOUTH_KINDS, "brows": BROW_KINDS}
@@ -235,7 +285,8 @@ def gen(only=None, kinds=None):
             if tags is None or (kinds and f"{part}_{kind}" not in kinds):
                 continue
             # 基準画像を初期画像に、清書パスなしで該当部位だけ inpaint
-            extra = ", " + NEG_EXTRA[part] if part in NEG_EXTRA else ""
+            extra = (", " + NEG_EXTRA[part] if part in NEG_EXTRA else "") + \
+                    (", " + NEG_EXTRA_KIND[(part, kind)] if (part, kind) in NEG_EXTRA_KIND else "")
             kw = dict(positive=POSITIVE(tags), ip_weight=0.0) if POSITIVE else {}
             G.run(_args(preset="expr", init=f"ms_{CHAR_NAME}_parts_base.png", mask=f"ms_{CHAR_NAME}_mask_{part}.png",
                         refine=0.0, denoise=DENOISE_KIND.get((part, kind), DENOISE[part]), tags=tags, name=f"{part}_{kind}",
@@ -303,8 +354,9 @@ class Raster:
                 keep = largest_component(np.asarray(af) > 0)
                 self.alpha_full = Image.fromarray(np.where(keep, np.asarray(af), 0).astype(np.uint8))
         small = self._small(base)
-        self.palette = small.quantize(colors=colors, method=Image.Quantize.MEDIANCUT,
-                                      dither=Image.Dither.NONE)
+        method = {"octree": Image.Quantize.FASTOCTREE,
+                  "mediancut": Image.Quantize.MEDIANCUT}[QUANT]
+        self.palette = small.quantize(colors=colors, method=method, dither=Image.Dither.NONE)
         self.colors = colors
         self.alpha = np.asarray(self._small_l(self.alpha_full, ext_frame=True)) >= 128
 

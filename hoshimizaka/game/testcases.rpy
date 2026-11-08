@@ -155,6 +155,31 @@ testcase ui_screens:
     run Return()
     pause 0.5
 
+testcase prefs_restore:
+    description "設定初期値復元（音量・文字速度・スキップ・走査線）。解除記録は保持"
+    $ _test.transition_timeout = 0.05
+    $ preferences.text_cps = 5
+    $ preferences.volumes["music"] = 0.2
+    $ preferences.volumes["sfx"] = 0.3
+    $ preferences.mute["music"] = True
+    $ preferences.skip_unseen = True
+    $ persistent.crt = False
+    $ persistent.op_seen = True
+    $ persistent.endings_seen = {"misaki"}
+    $ restore_default_settings()
+    pause 0.5
+    assert eval (renpy.store.preferences.volumes["music"] == 1.0)
+    assert eval (renpy.store.preferences.volumes["sfx"] == 1.0)
+    assert eval (not renpy.store.preferences.mute["music"])
+    assert eval (renpy.store.preferences.text_cps != 5)
+    assert eval (not renpy.store.preferences.skip_unseen)
+    assert eval (persistent.crt)
+    assert eval (persistent.op_seen)
+    assert eval ("misaki" in persistent.endings_seen)
+    run ShowMenu("preferences")
+    pause 0.8
+    screenshot "t_prefs_reset.png"
+
 testcase save_load:
     description "選択肢②でセーブ→進める→ロードで好感度・フラグが元に戻る（T3）"
     $ _test.transition_timeout = 0.05

@@ -248,6 +248,89 @@ def home():
     return _svg(body)
 
 
+# ------------------------------------------------------------ OP 用の背景プレート（人物なし）
+def _inject(svg, extra):
+    return svg[: svg.rindex("</svg>")] + extra + "</svg>"
+
+
+def _stars(n, ymax, seed=3, big=0.12):
+    import random
+    r = random.Random(seed)
+    out = ""
+    for _ in range(n):
+        x, y = r.randrange(640), r.randrange(ymax)
+        rad = 1.8 if r.random() < big else 1.0
+        out += f'<circle cx="{x}" cy="{y}" r="{rad}" fill="#fff" opacity="{r.uniform(.5, 1):.2f}"/>'
+    return out
+
+
+def op_starry_sky():
+    return _inject(night(False), _stars(160, 470, 5))
+
+
+def op_title_sky():
+    glow = ('<defs><radialGradient id="tg" cx="50%" cy="38%" r="55%"><stop offset="0" stop-color="#7a6ad8" stop-opacity=".55"/>'
+            '<stop offset="1" stop-color="#18286a" stop-opacity="0"/></radialGradient></defs>'
+            '<rect width="640" height="480" fill="url(#tg)"/>')
+    return _inject(night(False), glow + _stars(110, 470, 9))
+
+
+def op_observatory_night():
+    body = (
+        '<rect width="640" height="480" fill="url(#g)"/>' + _stars(130, 300, 13) +
+        '<circle cx="520" cy="80" r="24" fill="#fff6c8"/><circle cx="530" cy="74" r="22" fill="#18286a"/>'
+        '<path d="M0,480 L0,330 C140,300 260,290 360,310 C470,330 560,320 640,300 L640,480 Z" fill="#0c0e2a"/>'
+        # 天文台: 本館＋ドーム＋スリット＋望遠鏡
+        '<rect x="170" y="268" width="300" height="96" fill="#cfd6ea" stroke="#1a1a30" stroke-width="3"/>'
+        '<path d="M210,268 A110,110 0 0 1 430,268 Z" fill="#e8ecf8" stroke="#1a1a30" stroke-width="3"/>'
+        '<path d="M300,166 L340,166 L344,268 L296,268 Z" fill="#18286a" stroke="#1a1a30" stroke-width="3"/>'
+        '<path d="M316,236 L384,176" stroke="#8890c0" stroke-width="9" stroke-linecap="round"/>'
+        '<rect x="224" y="296" width="30" height="36" fill="#ffd36b"/><rect x="290" y="296" width="30" height="36" fill="#ffd36b"/>'
+        '<rect x="360" y="296" width="30" height="36" fill="#ffd36b"/><rect x="420" y="296" width="30" height="36" fill="#ffd36b"/>'
+        '<g stroke="#1a1a30" stroke-width="2" fill="none"><path d="M0,430 L640,430 M0,452 L640,452"/>'
+        + "".join(f'<line x1="{i * 40}" y1="418" x2="{i * 40}" y2="470"/>' for i in range(17)) + '</g>'
+        '<g fill="#ffd36b">' + "".join(f'<rect x="{(i * 71) % 620 + 8}" y="{384 + (i * 23) % 22}" width="3" height="3"/>' for i in range(16)) + '</g>')
+    return _svg(body, _grad("g", [(0, "#04061e"), (.7, "#18286a"), (1, "#3a3c8a")]))
+
+
+def op_slope_lamp():
+    glow = ('<defs><linearGradient id="sg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#fff2c0" stop-opacity=".55"/>'
+            '<stop offset=".5" stop-color="#fff2c0" stop-opacity=".12"/><stop offset="1" stop-color="#fff2c0" stop-opacity="0"/>'
+            '</linearGradient></defs><rect y="150" width="640" height="130" fill="url(#sg)"/>')
+    return _inject(slope("morning"), glow)
+
+
+def op_town_twilight():
+    return _inject(slope("sunset"), _stars(40, 120, 21))
+
+
+def op_hill_meteor_shower():
+    import random
+    r = random.Random(17)
+    lights = ""
+    for _ in range(420):
+        x = r.randrange(640)
+        y = r.randrange(262, 420)
+        col = r.choice(["#ffd36b", "#ffe9a8", "#ff9f6b", "#bfe4ff"])
+        lights += f'<rect x="{x}" y="{y}" width="2" height="2" fill="{col}" opacity="{r.uniform(.55, 1):.2f}"/>'
+    body = (
+        '<rect width="640" height="480" fill="url(#g)"/>' + _stars(190, 250, 31, big=0.18) +
+        '<rect y="258" width="640" height="222" fill="#0a0c24"/>'
+        '<path d="M0,262 C120,250 220,256 330,252 C440,248 540,258 640,250 L640,262 Z" fill="#1a2a60"/>'
+        + lights +
+        '<path d="M0,480 L0,432 C120,404 220,398 330,408 C450,418 540,406 640,386 L640,480 Z" fill="#05061a"/>')
+    return _svg(body, _grad("g", [(0, "#04061e"), (.75, "#18286a"), (1, "#3a3c8a")]))
+
+
+OP_BG = {
+    "bg_op_starry_sky": op_starry_sky,
+    "bg_op_title_sky": op_title_sky,
+    "bg_op_observatory_night": op_observatory_night,
+    "bg_op_slope_lamp": op_slope_lamp,
+    "bg_op_town_twilight": op_town_twilight,
+    "bg_op_hill_meteor_shower": op_hill_meteor_shower,
+}
+
 ALL = {
     "black": black,
     "slope": lambda: slope("morning"),

@@ -8,31 +8,39 @@ testsuite global:
         exit
 
 testcase boot:
-    description "起動→BIOS→OP（途中でスクリーンショット）→タイトル"
+    description "起動→BIOS→OP（全13カットの中間でスクリーンショット）→タイトル"
     $ _test.transition_timeout = 0.05
     $ persistent.op_seen = False
     pause until screen "bios_boot"
     pause 2.5
     screenshot "t_bios.png"
     keysym "K_RETURN"
-    pause 1.0
-    screenshot "t_op_00.png"
-    pause 3.5
-    screenshot "t_op_01_logo.png"
-    pause 4.0
-    screenshot "t_op_02_misaki.png"
-    pause 2.5
-    screenshot "t_op_03_eyes.png"
-    pause 2.0
-    screenshot "t_op_04_touka.png"
-    pause 3.0
-    screenshot "t_op_05_face.png"
-    pause 3.5
-    screenshot "t_op_06_chorus.png"
-    pause 4.0
-    screenshot "t_op_07_hill.png"
-    pause 3.5
-    screenshot "t_op_08_end.png"
+    pause 1.00
+    screenshot "t_op_01.png"
+    pause 1.50
+    screenshot "t_op_02.png"
+    pause 2.50
+    screenshot "t_op_03.png"
+    pause 3.50
+    screenshot "t_op_04.png"
+    pause 1.80
+    screenshot "t_op_05.png"
+    pause 2.70
+    screenshot "t_op_06.png"
+    pause 2.45
+    screenshot "t_op_07.png"
+    pause 0.95
+    screenshot "t_op_08.png"
+    pause 0.90
+    screenshot "t_op_09.png"
+    pause 0.80
+    screenshot "t_op_10.png"
+    pause 2.20
+    screenshot "t_op_11.png"
+    pause 3.50
+    screenshot "t_op_12.png"
+    pause 4.00
+    screenshot "t_op_13.png"
     pause until screen "main_menu"
     pause 1.0
     screenshot "t_title.png"

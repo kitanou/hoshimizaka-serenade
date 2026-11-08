@@ -730,6 +730,21 @@ style slot_button_text:
 ##
 ## https://www.renpy.org/doc/html/screen_special.html#preferences
 
+init python:
+
+    ## 設定の初期値復元。Ren'Py 標準の Preference("reset") は default 文を再実行して
+    ## persistent（OP 視聴済み・END 解除記録）まで戻してしまうため、対象を絞って復元する。
+    def restore_default_settings():
+        preferences.reset()
+        preferences.init_mixers()
+        for mixer in preferences.get_all_mixers() + ["main"]:
+            preferences.volumes[mixer] = 1.0
+            preferences.mute[mixer] = False
+        preferences.skip_unseen = False
+        persistent.crt = True
+        renpy.save_persistent()
+        renpy.restart_interaction()
+
 screen preferences():
 
     tag menu
@@ -810,6 +825,15 @@ screen preferences():
                         textbutton _("すべてミュート"):
                             action Preference("all mute", "toggle")
                             style "mute_all_button"
+
+                vbox:
+
+                    label _("リセット")
+
+                    textbutton _("初期値に戻す"):
+                        action Confirm(
+                            _("テキスト速度・オート待ち・音量・スキップなどの設定を初期値に戻します。（走査線は ON になります）\nセーブデータやエンディングの解除記録は消えませんが、よろしいですか？"),
+                            Function(restore_default_settings))
 
 
 style pref_label is gui_label

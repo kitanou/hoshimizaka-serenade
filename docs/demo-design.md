@@ -540,7 +540,7 @@ layeredimage misaki:
 | 冬華のテーマ曲 | 三拍子 | 四拍子（シーケンサが 1 小節=16 ステップ固定のため） |
 | 表情 `cool`（冬華） | — | 通常表情の眉を `b_cool` にしている |
 | サブキャラ楓 | 表情 4 種 | 立ち絵は 10 種のプリセットすべて使用可。出番は day2・day3・ノーマル END |
-| 配布ビルド | Win/Mac/Linux | **未実施**（SDK のランチャーで「ビルド」） |
+| 配布ビルド | Win/Mac/Linux | **ビルド実装済み（2026-11-08）**。mac は解凍→起動→パッケージ内テスト PASSED。win/linux はパッケージ内容確認のみ（実機待ち）。手順は README「ビルド（配布）」 |
 | 手動確認 | T4〜T8, T10 | **未確認**（旧セーブ互換・既読スキップ・OP 同期・拡大表示・誤字校正） |
 
 ### 14.3 自動テスト（`tools/run_tests.sh`）
@@ -551,6 +551,7 @@ layeredimage misaki:
 - `prologue_shots`: プロローグの立ち絵・会話ウィンドウ
 - `route_misaki` / `route_touka` / `route_normal`: 3 エンディングに到達し、`persistent.endings_seen` を確認（T2）
 - `ui_screens`: 設定・セーブ・ログ・おまけ画面
+- `prefs_restore`: 設定の初期値復元（解除記録は保持することも確認）
 - `save_load`: 変数を保存→書き換え→ロードで復元（T3）
 
 ### 14.4 ミサキの立ち絵の差し替え

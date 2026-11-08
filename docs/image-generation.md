@@ -82,6 +82,16 @@ python -m tools.gen_rpy             # images.rpy を再生成
 - 後ろ姿は `python -m tools.char_back gen|install misaki|touka`（顔が写るので IP-Adapter は使えず、プロンプトのみ）。採用 seed はミサキ 2、冬華 1。
 - 既知の課題: 冬華の「怒り」眉は前髪に隠れて弱い。眼の「びっくり」は目の下に影が出る。後ろ姿の制服の白は透過時に淡くなる。
 
+### 楓
+
+- 楓も参考画像がないため冬華と同じ手順。デザイン元は `tools/svg/chars.py` の kaede（橙の bob、緑の目、**丸眼鏡**、緑のリボン、黄色の髪留め）。
+- **基準バスト**: `comfy_gen gen --preset bg`（txt2img 896×1152）+ IP-Adapter 0.3 で seed 1〜6 を作り、**seed 6 採用**（髪留め・緑のリボン・丸眼鏡まで原案の要素が最も揃った）。冬華と違い **Negative に glasses, eyewear を入れない**（眼鏡が特徴）。Positive に `(orange hair:1.5), (round eyewear:1.4), (green bowtie:1.4), (yellow hairpin:1.2)`、Negative に他髪色・long hair・赤リボン・四角/太フレーム眼鏡。
+- `misaki_parts CONFIGS["kaede"]`: 部位マスクは冬華より広い（目が大きく、レンズが髪にかかる）。眼鏡は楕円 ring（`lens=(LENS_L, LENS_R, BRIDGE)`）で抽出し、フレームとまつ毛の重なる帯を `lash_zones` で復元から除外。
+- **サイズ合わせ**: 冬華と同じ「目幅で zoom 合わせ」では楓は 1.3 倍大きく着地した（目自体が大きく丸眼鏡でさらに大きく見えるため）。trio 比較で **zoom=416/340** に下げた（`fit` 内コメント）。
+- **パレット**: 虹彩の濃い緑が MEDIANCUT の 64 色から落ち、**瞳が navy に化けた**。`quant="octree"`（FASTOCTREE）で解決。緑が主役でないキャラは既定 MEDIANCUT のまま。
+- **wink 破綻が出やすい**: 目領域が大きいため happy/closed/pout が片目開けになりやすい。タグ・denoise を強め（0.95）、**採用 seed は eyes_happy 17・eyes_pout 11・eyes_closed 5（2 回め）**。tool の gen は固定 seed（`_s5`）で出すため、再現時は作り直して目視で良い方を選ぶ（生成済みファイルは adopted seed を `_s5` にリネームしてあります）。
+- 既知の課題: 怒り眉は前髪に隠れて弱い（冬華と同じ）。pout の目は細め。ボブの左右の髪先はキャンバス枠に触れて切れる（冬華のロングと同じ扱い）。
+
 ### 髪・頭が切れる問題（アウトペイント）
 
 - 美咲の基準バストは参考シートのパネルを切り出したもので、枠で髪の左側が切れている。冬華は顔を美咲に合わせて拡大するため、頭頂・両側がはみ出す。
@@ -123,3 +133,4 @@ python -m tools.gen_rpy             # images.rpy を再生成
 - 64 色だと肌がややピンク寄りになる。`--colors 96〜128` も比較候補。
 - **`pose`（ゼロから構図を作る生成）はまだ参考に似ない**: 髪が明るい、目が赤い、リボンがスカーフ状、靴下が長い（`--ip-weight 0.85` でも同様）。参考画像を初期画像にできないため。美咲専用 LoRA（stand/expr の出力を学習素材に）で解決するのが本筋。
 - 背景は `tools/bg_gen.py` で生成する（手順・プロンプトは [background-art-spec.md](background-art-spec.md)）。イベント CG は未着手。
+- 立ち絵 3 人（ミサキ・冬華・楓）は ComfyUI の layeredimage 素材で確定。手続き生成の立ち絵（`tools/gen_images.py`）は差し替え用の仮素材として残している。次はイベント CG（3 枚とも手続き生成のまま）が候補。

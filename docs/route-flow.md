@@ -59,8 +59,57 @@ else:                                            end_normal
 
 ### 1.3 到達不能パターン [確定]（テストで検証済み: testcases.rpy）
 
-- ミサキ END に `promised_misaki` は不要（①で冬華を選んでも ②③④a で 3 点作れる）→ [提案] 製品版ではルート進入条件に flag を要求（下記 §2）
+- ミサキ END に `promised_misaki` は不要（①で冬華を選んでも ②③④a で 3 点作れる）→ 製品版ではルート進入条件に flag を要求（**#25 実装済み**: 選択⑥の条件ゲート、§1.4）
 - 同一プレイで2ヒロインEND同時到達は不可（判定が単一）
+
+### 1.4 製品版共通ルート拡張（#25 実装済み・2026-11-09）
+
+day3 終盤は `decide_ending` ではなく **day4 へ接続**（`decide_ending` ラベルは互換温存・本編未参照）。
+
+```mermaid
+flowchart TD
+    C4M -- 約束する(④a +1) --> D4
+    C4T -- 俺もいる(④b +1) --> D4
+    D4[day4 4/11<br/>和解・坂で記憶のかけら<br/>if: 優先ヒロイン別の対話] --> C5{"選択⑤ 週末(4/13) 3択"}
+    C5 -- 丘をミサキと下見<br/>M+1, weekend_plan=misaki, hill_memory --> D5
+    C5 -- 冬華と望遠鏡整備<br/>T+1, weekend_plan=touka, fathernote --> D5
+    C5 -- 家にこもる<br/>weekend_plan=none, hill_memory --> D5
+    D5[day5 4/15→8/11 圧縮<br/>5月:部員3人/6月:審査通過<br/>7月:カウントダウン/8/11:3つの影] --> C6{"選択⑥ 8/12の夜<br/>(条件表示ゲート)"}
+    C6 -- "ミサキ（流星群の夜へ）<br/>if promised_misaki ∧ aff>=4" --> RM[route_misaki<br/>プレースホルダ→end_misaki(#26へ差替)]
+    C6 -- "冬華（天文台の夜へ）<br/>if joined_astro ∧ aff>=4" --> RT[route_touka<br/>プレースホルダ→end_touka(#27へ差替)]
+    C6 -- "この街へ（常時表示）" --> EN[end_normal 拡大<br/>8/12全員観測・NORMAL]
+```
+
+**章一覧と素材指定（#25）**
+
+| label | 日 | 内容 | bg | BGM/SE | 選択肢 |
+|---|---|---|---|---|---|
+| `day4` | 4/11 | 和解の兆し・新聞部の観測申請情報・坂で記憶の断片（if で対話変化） | hallway / classroom / slope_sunset | day, evening / chime | ⑤（3択） |
+| `day4_scout_misaki` | 4/13 | 丘の下見。1989年の約束の片鱗（hill_memory） | slope | misaki | — |
+| `day4_teach_touka` | 4/13 | 父の1966年観測ノートと欄外「丘にて、彼女と。三十年後、必ず」（fathernote） | clubroom | touka / page | — |
+| `day4_homealone` | 4/13 | 子どもらしい筆跡の「7年後の約束」発見、夜の坂でミサキと合流（hill_memory） | home / slope_night | day, evening | — |
+| `day5` | 4/15→8/11 | 圧縮ブリッジ（date_card テロップ）: 5月=部員3人（joined_astro で対話分岐）/6月=審査通過/7月=カウントダウン（if で対話分岐）/8/11=3つの影 | classroom / clubroom / hallway / slope_sunset | day, touka, evening | ⑥（条件表示） |
+| `route_misaki` | 8/12 | **プレースホルダ**。既存 end_misaki へ。#26 で個別章M・GOOD/BAD に差替 | — | — | — |
+| `route_touka` | 8/12 | **プレースホルダ**。既存 end_touka へ。#27 で差替 | — | — | — |
+| `end_normal` | 8/12夜 | **拡大済み**: 町あげての観測夜。fathernote/hill_memory の変種台詞。CG normal_end | slope_night → CG | evening→title / shoot | — |
+
+**新規 game 変数（variables.rpy、セーブ/ロールバック対象）**
+
+| 変数 | 型 | 設定箇所 | 用途 |
+|---|---|---|---|
+| `weekend_plan` | str | day4 選択⑤ | 4/13 の過ごし方。後続 day5 の 5月 対話分岐に使用 |
+| `hill_memory` | bool | ⑤a / ⑤c | 1989年の丘の記憶（決定案A §8-1）に触れた。end_normal 変種、#28 回収 |
+| `fathernote` | bool | ⑤b | 父の1966年ノート（決定案A §8-4・TRUE END 布石）。end_normal 変種、#28 star_promise 準備 |
+
+**配点・判定は決定案A のまま実装**: aff 最大5（①〜⑤）、進入閾値 `aff>=4` + flag。⑥はゲート付き choices（条件を満たさない選択肢は表示されない）。`この街へ` は常時表示 → NORMAL 直行。両ルート条件同時成立は選択構造上不可（混在時にどちらかが閾値未満）。
+
+**素材ギャップ（正式差し替え候補 → #20/#35/#56 にリンク）**
+- 丘の昼背景（`day4_scout_misaki`/`day5` 8/11 を slope + 台詞描写で代替）
+- 父のノート小道具CG/差し替え画像（現状テキスト描写のみ）
+- 5月/6月/7月 モンタージュ専用BGM（day/touka/evening 流用）
+- 夏服レイヤー（5〜8月も制服立ち絵レイヤーを流用）
+
+**セーブ互換メモ**: day2/day3/variables の編集で行位置が変わるため、dev 期間の旧セーブは壊れうる（0.97 配布ビルドからの継続プレイは非保証）。label 改名は行っていない（demo-design §5.1 遵守）。
 
 ## 2. 製品版ルート構成 [提案]
 
@@ -78,11 +127,11 @@ else:                                            end_normal
 
 | ルート | 条件案 | 根拠フラグ |
 |---|---|---|
-| ミサキ | `misaki_aff >= 4` かつ `promised_misaki` ①でミサキ経路が実質必須に | 約束 flag を必須化（story-bible §6） |
-| 冬華 | `touka_aff >= 4` かつ `joined_astro` | 天文部存続が冬華ルートの土台 |
-| ノーマル | 上記いずれも満たさない | 既存 decide_ending を拡張し、day5 終盤で判定 |
+| ミサキ | `misaki_aff >= 4` かつ `promised_misaki`。**実装済み（#25）**: day5 選択⑥の条件表示ゲート。①でミサキ経路が実質必須に | 約束 flag を必須化（story-bible §6） |
+| 冬華 | `touka_aff >= 4` かつ `joined_astro`。**実装済み（#25）**: 同ゲート | 天文部存続が冬華ルートの土台 |
+| ノーマル | `この街へ` は常時表示。両ゲート未達の収束先。8/12 全員観測夜へ（end_normal 拡大・**実装済み**） | 既存 decide_ending は互換温存・未参照 |
 
-- 配点再設計: **[決定案A・承認待ち]** day1〜3 の 4 択を維持 + day4(4/11) に新選択⑤を追加し**最大5**。進入閾値 4（flag 必須）。最終章前の確約は flag のみで aff を増やさない。詳細は story-bible.md §7 表 / §8-5
+- 配点: day1〜3 の既存4択 + day4(4/11)⑤ で**最大5**、進入閾値 4。**#25 で実装済み**（詳細 §1.4）。最終章前の確約は aff を増やさない想定（#26/#27）
 
 ### 2.2 個別ルート内の分岐 [提案]
 

@@ -66,7 +66,7 @@ label day3_misaki:
             show misaki sad
             mi "……そっか。そうだよね。ごめん、変なこと聞いて。"
             "彼女は笑ってみせたけれど、その声は少しだけ遠かった。"
-    jump decide_ending
+    jump day4
 
 label day3_touka:
     scene bg rooftop_night with fade
@@ -93,10 +93,11 @@ label day3_touka:
             show touka cool
             to "……無理なんて、してないわ。"
             "強がる横顔は、いつもより少しだけ小さく見えた。"
-    jump decide_ending
+    jump day4
 
 label decide_ending:
-    ## 好感度で分岐。同点・どちらも閾値未満ならノーマル。
+    ## 互換温存ラベル（demo-design §5.1）。#25 の day4/day5 実装で本編から参照されない。
+    ## 旧ラベル改名禁止のため削除しない。製品版ルート判定は day5 末尾の menu（選択⑥）。
     if misaki_aff >= 3 and misaki_aff > touka_aff:
         jump end_misaki
     elif touka_aff >= 3 and touka_aff > misaki_aff:

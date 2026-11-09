@@ -197,6 +197,7 @@ label end_touka_good:
     "――その記録の、欄外。誰にも読まれない余白に、小さな字迹で一行。"
     to "（……父さん。続きは、二人で書いたわ）"
     $ persistent.endings_seen.add("touka_good")
+    $ persistent.cg_seen.add("touka_end")
     jump demo_end_card_touka_good
 
 ## ---- BAD END  『冬の星座の別れ』 ----

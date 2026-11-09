@@ -545,14 +545,19 @@ layeredimage misaki:
 
 ### 14.3 自動テスト（`tools/run_tests.sh`）
 
-テストケースごとに別プロセスで実行する（`testcases.rpy`）。
+テストケースごとに別プロセスで実行する（`testcases.rpy`）。suite 先で静的監査 `tools/audio_audit.py`（#41・docs/audio-design.md）を走らせる。**同時実行は禁止**（別チェックアウトと persistent/GUI が競合して shutdown ハングする実測事故が 2026-11-09 にある）。ケース詳細の手順・期待は testcases.rpy 内のコメントに対応表。
 
 - `boot`: BIOS → OP（9 か所でスクリーンショット）→ タイトル
 - `prologue_shots`: プロローグの立ち絵・会話ウィンドウ
-- `route_misaki` / `route_touka` / `route_normal`: 3 エンディングに到達し、`persistent.endings_seen` を確認（T2）
+- `route_misaki` / `route_misaki_bad` / `route_touka` / `route_touka_bad` / `route_normal`: 各 END へ再現手順で到達し `persistent.endings_seen` を確認（T2・#43 の全 END 網羅 = T-TRUE-3）
+- `true_end` / `true_locked`: TRUE END 進入ゲート（両 GOOD 視聴）の開放/閉鎖（route-flow §3.1 の T-TRUE-1/2）
 - `ui_screens`: 設定・セーブ・ログ・おまけ画面
-- `prefs_restore`: 設定の初期値復元（解除記録は保持することも確認）
-- `save_load`: 変数を保存→書き換え→ロードで復元（T3）
+- `prefs_restore`: 設定の初期値復元（解除記録は保持することも確認・音量の再起動保持）
+- `save_load`: 変数を保存→書き換え→ロードで復元（T3・#43 のルート継続テスト）
+- `gallery`（#34）: おまけハブ→ENDリスト/CGギャラリー/音楽室。解放済み閲覧・未解放の「？」表示・再生停止・persistent 保持
+- `route_logic`（#43）: `logic.rpy` の純関数 gate_misaki/gate_touka/gate_true を直接叩く。境界値（aff 3/4）・フラグ・真理表、**好感度予算 AFF_BUDGET=5 で両ルートゲート同時成立の不存在**（到達不能分岐検査）、TRUE ゲートの永続連動
+- `audio`（#41）: 全宣言音源のロード、音量設定の反映、再生→差替→停止とループ、音量0/ミュートでの再生
+- `qa_assets`（#45）: 640×480 表示、images/ 配下全画像の実在・デコード、CG_GALLERY/BGM_ROOM 参照ファイル実在、セーブスロットの書込→json読出→削除
 
 ### 14.4 ミサキの立ち絵の差し替え
 
@@ -610,3 +615,13 @@ layeredimage misaki:
 - **サイズ合わせ**: 冬華は最初、ミサキより顔が約 0.6 倍の大きさだった（目の幅 256px 対 416px）。ミサキに合わせ、冬華の窓を 1.625 倍に拡大して目の位置も合わせて作り直した（`misaki_parts.py` の `fit`）。後ろ姿の冬華は 1.6 倍（`char_back.py` の `zoom`）。OP の表情（ミサキ・冬華とも）は本編と同じパーツ合成から作る。
 - **切れの修正**: ミサキは元の参考パネルの枠で髪の左側が切れ、冬華は拡大で頭頂・両側が切れていた。基準バストの上・左右を ComfyUI でアウトペイントして描き足し（`tools.misaki_parts extend`）、両キャラを同じ比率（0.78 倍）で縮めて、頭・髪がキャンバスに収まるようにした（顔の大きさは 2 人でそろえたまま）。肩・体の下端は、バストとして切れてよい。冬華の長い髪の毛先だけ左端にわずかに触れる。後ろ姿は頭頂に余白を付けた。
 
+
+### 14.9 おまけ画面: CGギャラリー・音楽室・ENDリスト（Issue #34）
+
+コア進行システムとは**疎結合**（main menu の「おまけ」1ボタンからのみ入る。指示: 初回リリースに不要なら外せる形）。640×480 の main menu ボタン枠は6つまで（mbtn ysize 28×6+Copyright 458）なので、追加画面は **おまけハブ画面 `otomake`**（screens_extra.rpy）経由:
+
+- **エンディングリスト `endings`**（#28 済み）: 視聴済みは ◆、未視聴は「◇？？？（条件ヒント）」で解放条件を常に開示
+- **CGギャラリー `cg_gallery` / `cg_view`**: `CG_GALLERY` 定義表（END CG 3枚）。解放は `persistent.cg_seen`（END 視聴時に各 END 末尾で add。misaki_good/touka_good でも本CG解放、true_end は normal_end を解放）。未解放行は「？」表示＋解放条件文言、解放数 n/3 表示。閲覧は全画面 `cg_view`（クリック/dismiss で閉じる）
+- **音楽室 `bgm_room`**: `BGM_ROOM` 定義表（BGM7曲）。`Play("music")`/`Stop("music")` アクション、再生曲名表示、再生済み曲目に ♪ マーク（`persistent.bgm_seen`、`renpy.save_persistent()` で即時保存）。音量は設定画面の一元制御に従うのみ（脚本側で操作しない。docs/audio-design.md）
+- **解放状態は全部 persistent**（端末保存・セーブデータと無関係・再起動後も維持 = #34 完了条件）。セーブ/読み込みをまたいでもおまけは消えない
+- 検証: testcase `gallery`（解放2/未解放1の混合で閲覧・？表示・再生停止・戻りをスクリーンショットと assert で確認）

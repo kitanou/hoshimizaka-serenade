@@ -365,7 +365,7 @@ screen main_menu():
         textbutton "はじめから" action Start()
         textbutton "つづきから" action ShowMenu("load") sensitive (renpy.newest_slot() is not None)
         textbutton "オープニング" action Replay("op")
-        textbutton "おまけ" action ShowMenu("endings") sensitive (len(persistent.endings_seen) > 0)
+        textbutton "おまけ" action ShowMenu("otomake") sensitive (len(persistent.endings_seen) > 0 or len(persistent.cg_seen) > 0 or persistent.op_seen)
         textbutton "設定" action ShowMenu("preferences")
         if renpy.variant("pc"):
             textbutton "終了" action Quit(confirm=False)

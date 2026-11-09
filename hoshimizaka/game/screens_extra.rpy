@@ -111,6 +111,7 @@ screen endings():
                 else:
                     text "◇ ？？？　（[hint]）" color "#8088aa"
             null height 8
+            textbutton "もどる" action ShowMenu("otomake")
             textbutton "オープニングを見る" action Replay("op")
 
 ## ---- 体験版終了カード ----
@@ -138,6 +139,107 @@ screen demo_end(eid):
         xysize (640, 480)
         action Return()
     key "dismiss" action Return()
+
+## ---- おまけ: CGギャラリー / 音楽室（#34。コア進行とは疎結：title menu のおまけ群からしか入らない） ----
+init python:
+    if persistent.cg_seen is None:
+        persistent.cg_seen = set()
+    if persistent.bgm_seen is None:
+        persistent.bgm_seen = set()
+
+    def _bgm_heard(bid):
+        persistent.bgm_seen.add(bid)
+        renpy.save_persistent()
+
+## おまけハブ（640×480: メインメニューのボタン枠は6つまで。#34 の追加画面はここから入る）
+screen otomake():
+    tag menu
+    use game_menu("おまけ", scroll="viewport"):
+        vbox:
+            spacing 12
+            textbutton "エンディングリスト" action ShowMenu("endings") sensitive (len(persistent.endings_seen) > 0)
+            textbutton "CGギャラリー" action ShowMenu("cg_gallery") sensitive (len(persistent.cg_seen) > 0)
+            textbutton "音楽室" action ShowMenu("bgm_room") sensitive persistent.op_seen
+            null height 10
+            text "解放状況は端末に保持されます。セーブデータとは無関係で、再起動後も維持されます。" size 12 color "#cfe0ff"
+
+define CG_GALLERY = [
+    ("misaki_end", "流星群の夜、あの子と", "坂のてっぺん・二人", "images/cg/misaki_end.png"),
+    ("touka_end", "屋上のふたり", "校屋上・望遠鏡", "images/cg/touka_end.png"),
+    ("normal_end", "八月十二日、全員で見上げた星空", "丘・町ぜんたい", "images/cg/normal_end.png"),
+]
+
+define BGM_ROOM = [
+    ("op",     "オープニング「丘のセレナーデ」", "audio/bgm/op.ogg"),
+    ("title",  "星見坂 テーマ", "audio/bgm/title.ogg"),
+    ("day",    "転校生の朝", "audio/bgm/day.ogg"),
+    ("evening","街灯の宵", "audio/bgm/evening.ogg"),
+    ("misaki", "幼なじみのテーマ", "audio/bgm/misaki.ogg"),
+    ("touka",  "天文部のテーマ", "audio/bgm/touka.ogg"),
+    ("tension","とまどいの四日", "audio/bgm/tension.ogg"),
+]
+
+screen cg_gallery():
+    tag menu
+    use game_menu("おまけ", scroll="viewport"):
+        vbox:
+            spacing 10
+            label "CGギャラリー"
+            for cid, title, sub, path in CG_GALLERY:
+                if cid in persistent.cg_seen:
+                    textbutton title:
+                        action ShowMenu("cg_view", cg=cid)
+                else:
+                    text "◇ ？？？　（対応する END を視聴すると解放）" color "#8088aa"
+            null height 8
+            $ _n = len([1 for e in CG_GALLERY if e[0] in persistent.cg_seen])
+            text "解放 [_n]/[len(CG_GALLERY)]　（解放状況は端末に保持され、再起動後も維持されます）" size 12 color "#cfe0ff"
+            null height 6
+            textbutton "もどる" action ShowMenu("otomake")
+
+screen cg_view(cg):
+    tag menu
+    modal True
+    add Solid("#000000")
+    python:
+        _e = [e for e in CG_GALLERY if e[0] == cg][0]
+    add Transform(Image(_e[3]), zoom=0.5):
+        xalign 0.5
+        yalign 0.46
+    text _e[1]:
+        xalign 0.5 ypos 424 size 16 bold True color "#ffe27a"
+        outlines [(1, "#000000", 1, 1)]
+    text _e[2]:
+        xalign 0.5 ypos 446 size 12 color "#cfe0ff"
+    textbutton "← とじる" xalign 0.05 ypos 452 action ShowMenu("cg_gallery")
+    text "クリックで閉じる" size 11 color "#aaaabb" xalign 0.91 ypos 462
+    button:
+        xysize (640, 480)
+        action ShowMenu("cg_gallery")
+    key "dismiss" action ShowMenu("cg_gallery")
+
+screen bgm_room():
+    tag menu
+    use game_menu("おまけ", scroll="viewport"):
+        vbox:
+            spacing 8
+            label "音楽室"
+            for bid, title, path in BGM_ROOM:
+                if bid in persistent.bgm_seen:
+                    textbutton ("♪ " + title):
+                        action [Play("music", path), Function(_bgm_heard, bid)]
+                else:
+                    textbutton title:
+                        action [Play("music", path), Function(_bgm_heard, bid)]
+            $ _playing = renpy.music.get_playing("music") is not None
+            textbutton "停止" action Stop("music") sensitive _playing
+            null height 6
+            $ _cur = renpy.music.get_playing("music")
+            $ _nm = [t for b, t, p in BGM_ROOM if p == _cur]
+            text "再生中: [_nm[0] if _nm else '——']" size 12 color "#cfe0ff"
+            text "ループ再生されます。音量は 設定→音量 で調整（設定は端末に保持）" size 11 color "#8088aa"
+            null height 4
+            textbutton "もどる" action ShowMenu("otomake")
 
 ## 名前欄の文字: 背景が色付きなので白＋黒フチにする
 style say_label:

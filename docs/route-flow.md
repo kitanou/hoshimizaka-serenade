@@ -175,37 +175,52 @@ flowchart TD
 | `touka_good` | TOUKA END『二人の観測』 | GOOD | 冬華ルート T-core-2 正解 | **実装済み(#27)** |
 | `bad_touka` | 冬の星座の別れ | BAD | 冬華ルート T-core-2 誤答/回避 | **実装済み(#27)** |
 | `normal` | NORMAL END（八月十二日、全員で見上げる星空） | NORMAL | ルート未進入 | 実装済み(#25) |
-| `end_true` | 星見坂のセレナーデ（TRUE） | TRUE | §3 条件 | #28 |
+| `true_end` | TRUE END『星見坂のセレナーデ』 | TRUE | §3 条件（両 GOOD 視聴→⑥みんなの丘） | **実装済み(#28)** |
 | `misaki`/`touka` | 予告END（体験版） | 温存 | decide_ending 経由（本編未参照） | 互換温存 |
 
-## 3. TRUE END 進入条件 [提案]
+## 3. TRUE END 進入条件 ── **実装済み（#28・2026-11-09）**
 
-issue #28 の指示（条件をコードへ直書きせず route-flow.md へ明記 + テストケース作成）に従う。
+issue #28 の指示（条件をコードへ直書きせず route-flow.md へ明記 + テストケース作成）に対応。
+
+**実装された条件（不合理な隠し条件にしない）:**
 
 ```python
-# 最終章 day5 終幕で判定（decide_ending とは別: decide_true_route）
-persistent.endings_seen ⊇ {"misaki", "touka"}   # 両 GOOD END を視聴済み（current 体験版名。製品版では *_good に読替）
-and (misaki_aff + touka_aff) の共通ルート配分が「どちらかに偏りすぎない」? → ✗ 却下案
-→ 採用案: TRUE END は「3人目の物語」ではなく、両ヒロインの GOOD END を踏んだ主人公が
-  流星群の夜(8/12)に「もう一つの約束」を果たす最終章専用シナリオ。
-  「もう一つの約束」[決定案A・承認待ち] = 1966年の流星群の夜、冬華の父（当時7歳）が丘で交わし
-  果たせなかった30年約束。1996/8/12 に主人公世代がリレー完走することで、
-  「星降りの伝説」の発生源と作品テーマ（何年もかけて届く光）を回収する（story-bible §8-4）。
-条件: 両 GOOD 視聴(persistent) + 最終章で新規フラグ star_promise=True（day5 の新選択肢で獲得）
+# day5 選択⑥ 直前（story/day5.rpy）:
+$ seen_good_both = ("misaki_good" in persistent.endings_seen and "touka_good" in persistent.endings_seen)
+# ⑥メニューに特別選択肢（条件表示ゲート）:
+#   "みんなの丘（八月十二日の夜）" if seen_good_both:
+#       $ star_promise = True
+#       jump true_route
+# → star_promise は TRUE 進入時にのみ立つフラグ。分岐後は単線（失敗状態なし）
 ```
 
-- [提案] 詳細: 最終章は day2_evening の楓の証言に対応する「丘の伝承の本当の由来」を開く章。TRUE END にはどちらの個別ルートからも day5 で分岐して入るが、**両 GOOD 視聴済みでないと view できない**（おまけの END リストではなく本編解放。`persistent.endings_seen` を game 変数 `seen_good_both` で写し、脚本で参照）
-- 理由: 体験版からの周回動機（#28「不合理な隠し条件にしない」）→ END リスト画面（おまけ）で TRUE のヒント文言を表示 [提案]
-- 到達不能検査: 両 GOOD 視聴なしで day5 分岐選択 → 通常章へ収束（TRUE は開かない）。テスト T-TRUE-1
+- 条件は **両 GOOD END 視聴（persistent）のみ**。好感度ゲートは要求しない（NORMAL 分岐と同じ収束から入れる）
+- おまけ END リストに TRUE エントリのヒント文言を常時表示（=`⑥で「みんなの丘」を選ぶ`）。未解放時は「◇？？？（両 GOOD END を視聴し、8/12 の夜に『みんなの丘』を選ぶ。）」として screens のロック表示に条件が出る
+- 到達不能検査: 片方未視聴では⑥にこの街へ等のみ（テスト `true_locked` で star_promise=False を検証）
 
-### 3.1 TRUE END 条件テスト（#43 に接続） [提案]
+**最終章シナリオ（story/true_route.rpy）:**
 
-| ケース | 手順 | 期待 |
-|---|---|---|
-| T-TRUE-1 | endings_seen={misaki,touka} で day5 → star_promise 選択 | end_true 到達 |
-| T-TRUE-2 | endings_seen={misaki} のみで day5 | end_true 非到達・通常 END |
-| T-TRUE-3 | 全 GOOD/BAD/NORMAL の到達網羅（testcase 1本ずつ） | 全 EN 解放 |
-| T-TRUE-4 | day5 中間セーブ→ロード→選択継続 | aff/flag 復元 |
+| label | 日 | 内容 | bg/BGM/SE |
+|---|---|---|---|
+| `true_route` | 8/11 | 入口（⑥→決意の一行） | — |
+| `tr1_hill` | 8/12夜 | 丘・全員観測。1966年ノートの見開きに四人で1996年の行を連署。**2026年の丘の約束**（star_promise の本文） | slope_night / title / shoot, page, heart |
+| `tr2_archive` | 8/13午 | 新聞部アーカイブで 1967年広報紙の投書「星がふたたび降る夜に、あなたへ」発見（署名なし・欄外に星図=父のノートと一致）。編集長ノート「返信なし」の年列 | clubroom / day / door, page |
+| `tr3_mother` | 8/13夕 | **1966年の少女の正体 = 主人公の母**（決定案A §8-4 (a) 採用・確定）。母の告白→仏間→返信便箋「三十年遅れの返事」 | home / touka / heart |
+| `tr4_final` | 8/16夜 | 2026年の丘の四人約束。CG normal_end 流用。END 解放 `true_end` + 製品版告知文 | slope_night→CG / misaki / shoot |
+
+- 母は立ち絵なし（「」付き地の文で発話）。正式母スプライトは #56 の候補に記録
+
+### 3.1 TRUE END 条件テスト（実装テストケース名）
+
+| ケース | 手順 | 期待 | 実 testcase |
+|---|---|---|---|
+| T-TRUE-1 | endings_seen に両 GOOD を add → day5⑥で「みんなの丘」→ star_promise 確立→終章 | true_end 到達 | `true_end` |
+| T-TRUE-2 | touka_good を discard（misaki_good のみ）→⑥にみんなの丘/両ゲート非表示→この街へ | NORMAL 収束・star_promise=False・seen_good_both=False | `true_locked` |
+| T-TRUE-3 | 全 END 網羅（good/bad×2・normal・true 各1本） | 6 END 解放 | route_misaki / route_misaki_bad / route_touka / route_touka_bad / route_normal / true_end |
+| T-TRUE-4 | 中間セーブ→ロード→変数復元 | aff/flag 復元 | save_load（変数保存機構で同種検証。day5 中間特化は不要と判断） |
+
+- 追加変数: `seen_good_both`（⑥直前に算出）/ `star_promise`（TRUE 進入時 True）
+- 注: 両 GOOD 視聴条件はクロスプレイ（周回）前提。同週回内の両ヒロイン GOOD 同時達成は aff 配点構造上不可（§1.4）→ 周回動機の担保が成立している
 
 ## 4. 体験版→製品版の移行メモ [提案]
 

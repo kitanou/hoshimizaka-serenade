@@ -5,7 +5,7 @@
 # usage: tools/run_tests.sh [RENPY_SDK_DIR]   （既定: ~/renpy-sdk）
 SDK="${1:-$HOME/renpy-sdk}"
 PROJ="$(cd "$(dirname "$0")/.." && pwd)/hoshimizaka"
-CASES="boot prologue_shots route_misaki route_misaki_bad route_touka route_touka_bad route_normal ui_screens prefs_restore save_load"
+CASES="boot prologue_shots route_misaki route_misaki_bad route_touka route_touka_bad route_normal true_end true_locked ui_screens prefs_restore save_load"
 fail=0
 for c in $CASES; do
   LOG="/tmp/renpy_test_$(basename "$(dirname "$PROJ")")_$c.log"

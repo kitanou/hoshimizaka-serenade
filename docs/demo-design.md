@@ -625,3 +625,11 @@ layeredimage misaki:
 - **音楽室 `bgm_room`**: `BGM_ROOM` 定義表（BGM7曲）。`Play("music")`/`Stop("music")` アクション、再生曲名表示、再生済み曲目に ♪ マーク（`persistent.bgm_seen`、`renpy.save_persistent()` で即時保存）。音量は設定画面の一元制御に従うのみ（脚本側で操作しない。docs/audio-design.md）
 - **解放状態は全部 persistent**（端末保存・セーブデータと無関係・再起動後も維持 = #34 完了条件）。セーブ/読み込みをまたいでもおまけは消えない
 - 検証: testcase `gallery`（解放2/未解放1の混合で閲覧・？表示・再生停止・戻りをスクリーンショットと assert で確認）
+
+### 14.10 タイトルロゴ・UI素材・権利（Issue #56）
+
+- **ロゴ画像化**: `tools/logo_art.py`（決定論的 PIL）が `gui/title_logo.png`（560×116・1x・透過）を描画。日本語「星見坂のセレナーデ」は同梱 Source Han Sans Lite で 洋硬影(2段オフセット)→濃紫 #2a0f5c 太縁→ピンク #ff2f86 細縁→上白下ピンクのグラデ塗り。英字行「HOSHIMIZAKA SERENADE」は冬華テーマのシアン #7fe3ff。四芒星スパーク8点+微細な星粒40点（固定座標）。テーマ12色へ量子化+Bayer 4×4 オーディザ（背景・キャラと同じ階調方針）
+- **会社名 plate**: `gui/company_plate.png`（300×24「星屑工房 STARDUST WORKS」+金星）。体験版終了カード `demo_end` に配置。タイトル下部の (C)1996 表記はテキストのまま（省スペース）。BIOS 画面には STARDUST-BIOS として緑テキストで同社名
+- **UI フレーム**: 会話ウィンドウ(textbox)・名前プレート(namebox_*)・選択肢ボタン・クイックメニュー・バー/スライダー・セーブスロット・CRT 走査線は tools/gen_images.py 生成の既存セット（ミサキ Pink / 冬華 Cyan / 濃紫で統一済み）。カーソルは Ren'Py 標準マウス+ボタンホバー（独自カーソル画像を作らない Ren'Py 標準方針）
+- **権利確認**: フォント SIL OFL 1.1（本文を `hoshimizaka/game/fonts/OFL.txt` にバンドル。OFL の再配布条件=ライセンス同梱を満たす）。画像・音声はすべて本リポジトリ手続き生成または ComfyUI ローカル生成のオリジナル（docs/image-generation.md・docs/background-art-spec.md・docs/audio-design.md）
+- 検証: boot テスト `t_title.png`（新ロゴ適用のタイトル）、`t_end_normal` 等の終了カードに plate 表示。640×480 で全要素可読

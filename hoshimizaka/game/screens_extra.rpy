@@ -20,25 +20,14 @@ screen crt_overlay():
 init python:
     config.overlay_screens.append("crt_overlay")
 
-## ---- ロゴ ----
+## ---- ロゴ（#56: gui/title_logo.png 画像化。tools/logo_art.py 生成・OFL フォント使用）----
 screen title_logo(y=54):
     vbox:
         xalign 0.5
         ypos y
-        spacing 4
+        spacing 2
 
-        text "星見坂{size=34}の{/size}セレナーデ":
-            size 50
-            bold True
-            color "#ffe1f0"
-            xalign 0.5
-            outlines [(4, "#2a0f5c", 0, 0), (4, "#ff2f86", 4, 4)]
-        text "HOSHIMIZAKA SERENADE":
-            size 16
-            italic True
-            color "#7fe3ff"
-            xalign 0.5
-            outlines [(2, "#1a1050", 1, 1)]
+        add "gui/title_logo.png"
         frame:
             xalign 0.5
             background Solid("#ff5fa2")
@@ -129,6 +118,7 @@ screen demo_end(eid):
             background None
             padding (14, 4)
             text "1996年 冬 発売予定!?" size 15 color "#ffe27a"
+        add "gui/company_plate.png" xalign 0.5
         python:
             _t = [t for e, t, h in ENDING_LIST if e == eid]
         if _t:

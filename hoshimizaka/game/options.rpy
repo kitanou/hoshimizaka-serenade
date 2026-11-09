@@ -211,3 +211,17 @@ init python:
 
 ## 同期機能は使わない
 define config.has_sync = False
+
+## ---- 配布ビルド設定（#48）----
+## 指示: 開発環境に依存するファイル・デバッグ素材を配布物へ含めない。
+## build.classify(pattern, None) で配布アーカイブから除外する（開発実行・test 実行には無影響）
+init python:
+    build.classify("game/testcases.rpy", None)
+    build.classify("game/testcases.rpyc", None)
+    build.classify("game/cache/**", None)
+
+## アプリ名・タイトル・バージョン・アイコン（#48 実装内容）
+##   config.name = 星見坂のセレナーデ（このファイル冒頭）
+##   config.window_title = 星見坂のセレナーデ　体験版（audio.rpy で定義）
+##   config.version = 0.97（このファイル冒頭。配布ファイル名の版数に使用）
+##   config.window_icon = gui/window_icon.png（このファイル-icons 部。tools/gen_images.py 生成）

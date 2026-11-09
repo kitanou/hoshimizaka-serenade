@@ -100,6 +100,25 @@ lib\py3-windows-x86_64\python.exe renpy.py launcher distribute C:\path\to\hoshim
 
 - 生成された `dists/` はコミットしない（`.gitignore` 済み）。リリース時に各 OS 版 zip を GitHub Release 等に添付する
 - 配布物には `.rpy` と `.rpyc` の両方が含まれる（旧セーブ互換のため label 改名禁止。docs/demo-design.md §5.1）
+- 配布物から開発素材を除外: `game/testcases.rpy(rpyc)`・`game/cache/**` は `options.rpy` の `build.classify(..., None)` でビルドから除外される（#48 の指示）。実測: 配布 zip 内に testcases なし
+
+### リリース・更新手順（#48）
+
+1. `options.rpy` の `config.version` を更新（現在 0.97。配布ファイル名に入る）
+2. 上記 distribute で `dists/` を再生成（mac 実機で全 OS 分を作れる。Windows 版 runtime は SDK が自動取得）
+3. GitHub Release に win / mac / linux 版を添付（3 OS 同梱の pc.zip は任意）:
+
+```bash
+gh release create v0.97 \
+  hoshimizaka/dists/HoshimizakaSerenade-0.97-win.zip \
+  hoshimizaka/dists/HoshimizakaSerenade-0.97-mac.zip \
+  hoshimizaka/dists/HoshimizakaSerenade-0.97-linux.tar.bz2 \
+  -t "星見坂のセレナーデ 製品版開発ビルド 0.97" \
+  --notes-file RELEASE_NOTES.md --latest
+```
+
+4. リリースノートに必ず含める: ①本版の内容（ルート・画面）②**既知の問題**（検証していない環境・機能。本版では Windows 実機での起動/音声確認を未実施）③**操作説明**（クリック/スペースで送り、`Ctrl` スキップ、`H` ヒストリー、`S` セーブ、`A` オート、`M` ミュート、`F` 全画面、`Esc` ゲームメニュー。設定画面で音量・テキスト速度・CRT 走査線 ON/OFF）
+5. 更新 = ①バージョン更新 → ②再生成 → ③Release 差し替え。セーブ互換のため label 改名禁止（docs/demo-design.md §5.1）
 
 ## ライセンス・素材
 

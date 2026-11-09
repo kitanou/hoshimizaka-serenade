@@ -5,6 +5,7 @@
 import numpy as np
 
 from .synth import Mix, SR
+from .voice import Voice, add_voice
 
 CHORD = {
     "C": (36, (60, 64, 67)), "F": (41, (57, 60, 65)), "G": (43, (59, 62, 67)),
@@ -29,9 +30,29 @@ LYR = [
 ]
 _END = [(81, 1), (79, 1), (77, 1), (76, 1), (72, 4)]
 
+# ---- #83 ボーカル（tools/music/voice.py）: LYR の各「音」へのモーラ割当 ----
+# 1 リスト = LYR の行の非休符音符と 1:1。'.' で 1 音符内の複数モーラ、末尾 '.' は長音。
+# 歌詞の全モーラを発話しつつ、原曲メロディ（＝歌詞字幕 OP_LYRICS と同じタイミング）を崩さない。
+OP_SYL = [
+    # 坂道のむこう　流れ星ひとつ
+    ["sa", "ka", "mi", "chi", "no", "mu", "ko", "o", "na.ga", "re.ho", "shi.hi", "to.tsu"],
+    # キミの名前を　夜空に呼んだ
+    ["ki", "mi", "no", "na", "ma.e", "wa", "yo", "zo", "re", "ni", "yon", "da"],
+    # ときめくハートは　秘密のメロディ
+    ["to", "ki", "me", "ku", "ha.", "to", "wa", "hi", "mi", "tsu.no", "me.ro", "di.i"],
+    # 制服のまま　明日へ駆けだそう
+    ["sei", "fu", "ku", "no", "ma", "ma", "a", "shi.ta", "e", "ka.ke", "da.so", "u"],
+    # Shooting Star!　願いをのせて
+    ["shu", "u", "tin", "ga", "su", "ta", "a.", "ne", "ga", "i", "wo.no", "se.te"],
+    # この想い　ずっと　輝いて
+    ["ko", "no", "o", "mo", "i", "zu", "tto", "ka.ga", "ya.i", "te"],
+]
+_OP_VOICE = [m for row in OP_SYL for m in row]
+
 SONGS = {
     "op": dict(bpm=128, loop=False, lead=dict(type="square", vol=.085, vib=9, send=.5), drums=True, arp=True,
                crash=[2, 10, 14], fill=[1, 9],
+               voice=_OP_VOICE, voice_vol=.30, voice_send=.35, voice_cut=5200,
                bars="F G F G Em Am F G Em Am F G Em Am F C".split(),
                mel=[(0, 8)] + [n for _, m in LYR for n in m] + _END),
     "title": dict(bpm=92, loop=True, lead=dict(type="triangle", vol=.12, vib=6, send=.6), drums=False, arp=True, soft=True,
@@ -85,6 +106,21 @@ def render_song(name):
             ev.setdefault(round(b * 4), []).append((m, d))
         b += d
     assert abs(b - nbars * 4) < 1e-6, f"{name}: メロディが {b} 拍（小節 {nbars * 4} 拍）"
+    # #83: ボーカル事象表。非休符音符を順番にモーラ列へ対応させる（OP_LYRICS と同一時刻）
+    vev = {}
+    syl_flat = s.get("voice") or []
+    VOC = None
+    if syl_flat:
+        j = 0
+        bb = 0.0
+        for m, d in s["mel"]:
+            if m:
+                if j < len(syl_flat):
+                    vev[round(bb * 4)] = syl_flat[j].split(".")  # '.' でモーラ分割
+                    j += 1
+            bb += d
+        assert j == len(syl_flat), f"{name}: ボーカルモーラ {j} != {len(syl_flat)}"
+        VOC = Voice(mix.rng)
     soft = s.get("soft", False)
     loop = s["loop"]
     for k in range(total_steps):
@@ -131,10 +167,18 @@ def render_song(name):
         for m, d in ev.get(k, []):
             L = s["lead"]
             dur = d * beat * .95
-            mix.tone(t, m, dur, type=L["type"], vol=L["vol"], vib=L.get("vib", 0) if dur > .35 else 0,
+            sung = bool(vev.get(k))
+            lvol = L["vol"] * (.55 if sung else 1.0)
+            mix.tone(t, m, dur, type=L["type"], vol=lvol, vib=L.get("vib", 0) if dur > .35 else 0,
                      send=L.get("send", 0), cut=L.get("cut"), a=.012, r=.06)
             if not soft:
-                mix.tone(t, m, dur, type="triangle", vol=L["vol"] * .6, detune=7, a=.012, r=.06)
+                mix.tone(t, m, dur, type="triangle", vol=lvol * .6, detune=7, a=.012, r=.06)
+            if sung:
+                # #83: フォルマント女性ボーカル（フェーズ2 案より、11小節目 crash と重なる
+                # ため SE hit は不入。コーラス風 square ダブリングは .55 音量で共存）
+                add_voice(mix, VOC, t, m, d * beat * .98, vev[k],
+                          vol=s.get("voice_vol", 1.0), send=s.get("voice_send", 0),
+                          cut=s.get("voice_cut", 5200))
     out = mix.render()
     n_total = int(length * SR)
     if loop:

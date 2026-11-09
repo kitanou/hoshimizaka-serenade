@@ -27,7 +27,17 @@ def main():
     only = set(sys.argv[1:])
     for name in SONGS:
         if not only or name in only:
-            save(os.path.join(AUDIO, "bgm", f"{name}.ogg"), render_song(name))
+            y = render_song(name)
+            spec = SONGS[name]
+            if not spec.get("loop", True):
+                # #80: 非ループ曲（op のみ）は作曲尺（小節数×拍）で実体を終了させ、
+                # シンセの余韻 +3.0s を意図的に落とす。op-storyboard §9「30.000秒で
+                # 音楽と映像が同時に終了」対応。終端 0.4s は実体フェード
+                end = int(len(spec["bars"]) * 4 * 60.0 / spec["bpm"] * SR)
+                fade = int(0.4 * SR)
+                y = y[:end]
+                y[-fade:] *= np.linspace(1.0, 0.0, fade)
+            save(os.path.join(AUDIO, "bgm", f"{name}.ogg"), y)
     for name, fn in se.ALL.items():
         if not only or name in only or "se" in only:
             save(os.path.join(AUDIO, "se", f"{name}.ogg"), fn())

@@ -100,7 +100,8 @@ lib\py3-windows-x86_64\python.exe renpy.py launcher distribute C:\path\to\hoshim
 
 - 生成された `dists/` はコミットしない（`.gitignore` 済み）。リリース時に各 OS 版 zip を GitHub Release 等に添付する
 - 配布物には `.rpy` と `.rpyc` の両方が含まれる（旧セーブ互換のため label 改名禁止。docs/demo-design.md §5.1）
-- 配布物から開発素材を除外: `game/testcases.rpy(rpyc)`・`game/cache/**` は `options.rpy` の `build.classify(..., None)` でビルドから除外される（#48 の指示）。実測: 配布 zip 内に testcases なし
+- **再生成前に `dists/` を空にする**（`--destination` をプロジェクト外にする手もある）。プロジェクト内 dists は扫描に混入して旧 zip が入れ子になる実測あり（2026-11-09・pc.zip 536MB 化）。`options.rpy` に `build.classify("dists/**", None)` 等の除外宣言済みだが空にしてからの再生成が安全
+- 配布物から開発素材を除外: `game/testcases.rpy(rpyc)`・`game/cache/**` は `options.rpy` の `build.classify(..., None)` でビルドから除外される（#48 の指示）。実測: 配布 zip 内に testcases なし（`game/cache/bytecode-*.rpyb`・`build_info.json` は Ren'Py 自体が書く起動高速化副産物で約0.5MB。テスト素材は解凍後の実行で `TestCase gallery not found` を確認し非同梱を実証）
 
 ### リリース・更新手順（#48）
 

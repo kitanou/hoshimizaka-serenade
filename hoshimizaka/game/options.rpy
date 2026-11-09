@@ -219,6 +219,12 @@ init python:
     build.classify("game/testcases.rpy", None)
     build.classify("game/testcases.rpyc", None)
     build.classify("game/cache/**", None)
+    # dists をプロジェクト内に置く場合、再生成前に dists を空にすること（2026-11-09 実測: 旧zipが扫描され混入）。
+    # 対策として dists/ と開発ログ類も除外宣言（cache の bytecode 自体は Ren'Py がビルド過程で書き出す起動高速化目的の副産物で約0.5MB）
+    build.classify("dists/**", None)
+    build.classify("log.txt", None)
+    build.classify("errors.txt", None)
+    build.classify("traceback.txt", None)
 
 ## アプリ名・タイトル・バージョン・アイコン（#48 実装内容）
 ##   config.name = 星見坂のセレナーデ（このファイル冒頭）

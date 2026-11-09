@@ -10,6 +10,8 @@ testsuite global:
 testcase boot:
     description "起動→BIOS→OP（全13カットの中間でスクリーンショット）→タイトル"
     $ _test.transition_timeout = 0.05
+    # OP は固定長シーケンス。until の既定 5s と綱引きで間欠的に超えるため余裕を取る（2026-11-09 flake 対応）
+    $ _test.timeout = 15
     $ persistent.op_seen = False
     pause until screen "bios_boot"
     pause 2.5
@@ -146,12 +148,46 @@ testcase route_touka:
     advance until screen "choice"
     click "天体望遠鏡を冬華と整備する"
     advance until screen "choice"
-    click "冬華（天文台の夜へ）"
+    click "冬華（屋上の観測夜へ）"
+    advance until screen "choice"
+    screenshot "t_touka_core1.png"
+    click "なら、そのバトンを一緒に走らせてくれ"
+    advance until screen "choice"
+    screenshot "t_touka_core2.png"
+    click "継走はやめて、綾瀬さん自身の星空を始めよう"
     advance until screen "demo_end"
     pause 2.5
-    screenshot "t_end_touka.png"
-    assert eval ("touka" in persistent.endings_seen)
+    screenshot "t_end_touka_good.png"
+    assert eval ("touka_good" in persistent.endings_seen)
     assert eval (renpy.store.touka_aff == 5 and renpy.store.fathernote)
+    assert eval (renpy.store.touka_motive == "relay")
+
+testcase route_touka_bad:
+    description "冬華ルート BAD END（冬の星座の別れ）へ到達"
+    $ _test.transition_timeout = 0.05
+    run Jump("start")
+    advance until screen "choice"
+    click "屋上へ行ってみる"
+    advance until screen "choice"
+    click "部室の掃除を手伝う"
+    advance until screen "choice"
+    click "夜の屋上へ行く"
+    advance until screen "choice"
+    click "ひとりじゃない"
+    advance until screen "choice"
+    click "天体望遠鏡を冬華と整備する"
+    advance until screen "choice"
+    click "冬華（屋上の観測夜へ）"
+    advance until screen "choice"
+    click "綾瀬さんのための観測は、どこへ行ったんだ"
+    advance until screen "choice"
+    screenshot "t_touka_core2_bad.png"
+    click "任務は果たされた。よくやった、で終わらせよう"
+    advance until screen "demo_end"
+    pause 2.5
+    screenshot "t_end_bad_touka.png"
+    assert eval ("bad_touka" in persistent.endings_seen)
+    assert eval (renpy.store.touka_motive == "self")
 
 testcase route_normal:
     description "ノーマル予告ENDへ到達"

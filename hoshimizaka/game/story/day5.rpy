@@ -92,16 +92,12 @@ label day5:
     menu:
         "ミサキ（流星群の夜へ）" if promised_misaki and misaki_aff >= 4:
             jump route_misaki
-        "冬華（天文台の夜へ）" if joined_astro and touka_aff >= 4:
+        "冬華（屋上の観測夜へ）" if joined_astro and touka_aff >= 4:
             jump route_touka
         "この街へ（夏休み）":
             jump end_normal
 
 ## ---- ルート分岐先 ----
 ## route_misaki → story/misaki_route.rpy（#26 実装済み: M-1..3 + GOOD/BAD END）
-## #27: 冬華個別ルート（day8T-1..3 + GOOD/BAD）へ差し替え予定。同上。
+## route_touka → story/touka_route.rpy（#27 実装済み: T-1..3 + GOOD/BAD END）
 ## #28: TRUE END は両 GOOD 視聴 + star_promise の最終章（route-flow §3）として本ラベルとは別に実装。
-
-label route_touka:
-    "八月十二日。観測の屋上へ、俺は走る――"
-    jump end_touka

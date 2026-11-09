@@ -8,6 +8,7 @@ define ENDING_LIST = [
     ("touka_good", "TOUKA END『二人の観測』", "署名欄に、二人分の名前を書いた。"),
     ("bad_touka", "TOUKA BAD END『冬の星座の別れ』", "望遠鏡は町の保管庫へ。任務了。"),
     ("normal", "NORMAL END", "八月十二日、全員で見上げる星空。"),
+    ("true_end", "TRUE END『星見坂のセレナーデ』", "両 GOOD END を視聴し、8/12 の夜に『みんなの丘』を選ぶ。"),
 ]
 
 ## ---- CRT 走査線 ----

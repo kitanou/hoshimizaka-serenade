@@ -13,6 +13,8 @@ default hill_memory = False    # 1989年の丘の記憶に触れた（⑤a/⑤c�
 default fathernote = False     # 父の1966年観測ノートを見た（⑤b）。TRUE END 布石（#28）
 default misaki_honest = False  # ミサキルート M-core-1 で「覚えていない」と認めた（#26）
 default touka_motive = ""      # 冬華ルート T-core-1 の動機回答: "relay"(遺志の継走)/"self"(自分のための星)（#27）
+default seen_good_both = False # day5 ⑥直前に算出: 両 GOOD END 視聴済み（persistent 写し）。TRUE 分岐ゲート（#28）
+default star_promise = False   # 2026年の丘の約束（#28 TRUE END 進入時に True）
 
 default persistent.op_seen = False
 default persistent.endings_seen = set()

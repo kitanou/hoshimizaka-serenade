@@ -89,7 +89,15 @@ label day5:
     "坂のてっぺんで、二人は同時に、でもちがう星空を見上げて、待っていた。"
     "――俺の返事は、もう決まっていた。決まっていた、はずだった。"
 
+    # TRUE END ゲート判定（route-flow §3）。persistent.endings_seen をゲーム変数に写して脚本で参照
+    $ seen_good_both = ("misaki_good" in persistent.endings_seen and "touka_good" in persistent.endings_seen)
+    if seen_good_both:
+        "……不思議な気がした。この二人の『答え』を、俺はもう、二度ずつ知っている。……だから今夜、もう一つの約束のほうへ行ける"
+
     menu:
+        "みんなの丘（八月十二日の夜）" if seen_good_both:
+            $ star_promise = True
+            jump true_route
         "ミサキ（流星群の夜へ）" if promised_misaki and misaki_aff >= 4:
             jump route_misaki
         "冬華（屋上の観測夜へ）" if joined_astro and touka_aff >= 4:

@@ -52,6 +52,13 @@ init python:
             renpy.hide_screen("oplyr%d" % (i - 2))
         renpy.show_screen("op_lyric", i % 2, text, delay, dur, _tag="oplyr%d" % i)
 
+    def op_cut(n):
+        """#81: カット頭のスクリーンショット決定性アンカー。不可視 screen op_cut_NN を
+        カット頭に張り、前のを隠す。boot テストは pause until screen で待つ。"""
+        if n > 1:
+            renpy.hide_screen("op_cut_%02d" % (n - 1))
+        renpy.show_screen("op_cut_%02d" % n)
+
     def op_clear():
         for i in range(len(OP_LYRICS)):
             renpy.hide_screen("oplyr%d" % i)
@@ -60,6 +67,8 @@ init python:
         renpy.hide_screen("op_blackout")
         renpy.hide_screen("op_glowflash")
         renpy.hide_screen("op_ui")
+        for _n in range(1, 14):
+            renpy.hide_screen("op_cut_%02d" % _n)
 
 ## ---------------------------------------------------------------- 変換
 
@@ -182,12 +191,24 @@ transform op_back_r:
 ## CUT 11: サビ（バウンス＋髪のゆらぎ）。#79: y を引数化して2人の頭の位置を揃える
 transform op_bounce(x, delay, y=50):
     anchor (0.0, 0.0) pos (x, y) yoffset 300
-    pause delay
-    ease 0.6 yoffset 0
-    block:
-        ease 0.234 yoffset -5 rotate 0.8
-        ease 0.234 yoffset 0 rotate -0.8
-        repeat
+    parallel:
+        ## #81: カット頭シェイク（xoffset のみ。yoffset ループと並列で衝突しない）
+        xoffset -4
+        pause 0.035
+        xoffset 5
+        pause 0.035
+        xoffset -3
+        pause 0.035
+        xoffset 4
+        pause 0.035
+        xoffset 0
+    parallel:
+        pause delay
+        ease 0.6 yoffset 0
+        block:
+            ease 0.234 yoffset -5 rotate 0.8
+            ease 0.234 yoffset 0 rotate -0.8
+            repeat
 
 transform op_pump:
     zoom 1.03
@@ -227,6 +248,28 @@ transform op_twinkle(delay=0.0):
             linear 0.6 zoom 1.0 alpha 1.0 rotate 22
             linear 0.6 zoom 0.3 alpha 0.3 rotate 45
         repeat
+
+## #81: カット頭のシェイク（約5フレーム・90年代風）。xoffset/yoffset だけ触るので
+## pos/anchor/zoom 系変換と合成できる（xoffset/yoffset だけ触る）。
+## yoffset を使う変換（op_bounce 等）には xoffset 限定の並列ブロックで適用する
+transform op_jolt:
+    xoffset -4
+    yoffset 3
+    pause 0.035
+    xoffset 5
+    yoffset -4
+    pause 0.035
+    xoffset -3
+    yoffset -5
+    pause 0.035
+    xoffset 4
+    yoffset 2
+    pause 0.035
+    xoffset -2
+    yoffset 4
+    pause 0.035
+    xoffset 0
+    yoffset 0
 
 transform op_slide_r:
     xoffset -30 alpha 0.0
@@ -410,6 +453,16 @@ image op_shoot_d:
     pause 0.7
     repeat
 
+## #81: CUT13 専用。26.25 表示→0.75s 待って 27.0s に通過開始、ロゴ（中央 320,150）の
+## 上を横切る。op_shoot_a のループ位相に依存していた既計（副作用代替）からの確定化
+image op_shoot_logo:
+    "images/fx/shoot.png"
+    xzoom -0.8 yzoom 0.6 rotate -18 anchor (0.5, 0.5) alpha 0.0 pos (660, 55)
+    pause 0.75
+    alpha 1.0
+    linear 0.8 pos (170, 205) alpha 1.0
+    linear 0.3 alpha 0.0 pos (100, 235)
+
 image op_shoot_e:
     "images/fx/shoot.png"
     xzoom -0.7 yzoom 0.6 rotate -24 anchor (0.5, 0.5) alpha 0.0 pos (300, -30)
@@ -419,6 +472,34 @@ image op_shoot_e:
     repeat
 
 ## ---------------------------------------------------------------- 画面
+
+## #81: スクショ決定性アンカー（不可視）。各カット頭で op_cut(n) が張り替える
+screen op_cut_01():
+    add Null()
+screen op_cut_02():
+    add Null()
+screen op_cut_03():
+    add Null()
+screen op_cut_04():
+    add Null()
+screen op_cut_05():
+    add Null()
+screen op_cut_06():
+    add Null()
+screen op_cut_07():
+    add Null()
+screen op_cut_08():
+    add Null()
+screen op_cut_09():
+    add Null()
+screen op_cut_10():
+    add Null()
+screen op_cut_11():
+    add Null()
+screen op_cut_12():
+    add Null()
+screen op_cut_13():
+    add Null()
 
 screen op_flash():
     zorder 160
@@ -434,6 +515,7 @@ screen op_glowflash():
 
 screen op_lyric(row, txt, delay, dur):
     zorder 150
+    $ _ly = u"\u266a " + txt  ## #81: 歌唱中行の ♪ マーカー（表示のみ。データ本文は不変）
     fixed:
         fit_first True
         if row == 0:
@@ -444,8 +526,8 @@ screen op_lyric(row, txt, delay, dur):
             xpos 606
         yanchor 1.0
         ypos (418 if row == 0 else 460)
-        text txt size 24 bold True color "#ffffff" outlines [(2, "#1b1f6b", 0, 0)]
-        text txt size 24 bold True color "#ff5fa2" outlines [(2, "#ffffff", 0, 0)] at lyric_wipe(delay, dur)
+        text _ly size 24 bold True color "#ffffff" outlines [(2, "#1b1f6b", 0, 0)]
+        text _ly size 24 bold True color "#ff5fa2" outlines [(2, "#ffffff", 0, 0)] at lyric_wipe(delay, dur)
 
 screen op_ui():
     zorder 180
@@ -465,6 +547,7 @@ label op:
     show screen op_ui
 
     ## CUT 01  0.000  星屑工房 presents
+    $ op_cut(1)
     scene black
     show op_stars
     show op_presents
@@ -473,6 +556,7 @@ label op:
     ## CUT 02  1.875  流星
     if op_wait(1.875):
         jump op_done
+    $ op_cut(2)
     $ op_flash()
     $ renpy.sound.play(audio.shoot)  ## #80: 流星のきらめき（絵コンテ §5 許可範囲。音量は sfx mixer）
     scene op_bg_starry
@@ -488,20 +572,22 @@ label op:
     ## CUT 03  3.750  タイトル
     if op_wait(3.75):
         jump op_done
+    $ op_cut(3)
     $ op_flash()
     scene op_bg_title
     show op_stars
-    show op_glow at op_glow_in
+    show op_glow at op_glow_in, op_jolt
     show op_logo
-    show op_credit_line at at_xy(24, 40), op_slide_r
-    show op_spark at at_xy(96, 120), op_twinkle(0.0) as sp1
-    show op_spark at at_xy(510, 200), op_twinkle(0.3) as sp2
-    show op_spark at at_xy(440, 100), op_twinkle(0.6) as sp3
+    show op_credit_line at at_xy(24, 40), op_slide_r, op_jolt
+    show op_spark at at_xy(96, 120), op_twinkle(0.0), op_jolt as sp1
+    show op_spark at at_xy(510, 200), op_twinkle(0.3), op_jolt as sp2
+    show op_spark at at_xy(440, 100), op_twinkle(0.6), op_jolt as sp3
     $ op_lyric(1)
 
     ## CUT 04  7.500  ミサキ登場
     if op_wait(7.5):
         jump op_done
+    $ op_cut(4)
     $ op_flash()
     scene black
     ## #79: im.Tile + size 指定が画面を覆い切らず右端に縦の黒帯が出ていた（t_op_04 実測）。
@@ -515,6 +601,7 @@ label op:
     ## CUT 05  9.375  ミサキの目元アップ
     if op_wait(9.375):
         jump op_done
+    $ op_cut(5)
     scene black
     show expression Image("images/op/speed.png") as speed at at_xy(-330, -410)
     show op_misaki_eyes at op_eye_zoom_m
@@ -523,6 +610,7 @@ label op:
     ## CUT 06  11.250  天文台・冬華登場
     if op_wait(11.25):
         jump op_done
+    $ op_cut(6)
     $ op_flash()
     $ renpy.sound.play(audio.wind)  ## #80: 風の余白（2.5s。原曲のドラム不在小節を埋める）
     scene black
@@ -536,6 +624,7 @@ label op:
     ## CUT 07  15.000  ミサキ表情アップ（驚き→笑顔）
     if op_wait(15.0):
         jump op_done
+    $ op_cut(7)
     $ op_flash()
     scene black
     show expression Image("images/op/halftone_y.png") as ht
@@ -545,6 +634,7 @@ label op:
     ## CUT 08  15.938  冬華表情アップ（驚き→微笑み）
     if op_wait(15.9375):
         jump op_done
+    $ op_cut(8)
     scene black
     show expression Image("images/op/halftone_c.png") as ht
     show op_touka_face at op_face_t
@@ -552,6 +642,7 @@ label op:
     ## CUT 09  16.875  坂道・朝の光
     if op_wait(16.875):
         jump op_done
+    $ op_cut(9)
     scene black
     show op_bg_lamp at op_slope_forward
     show expression Solid("#fff6c8") as morning at op_light_in
@@ -559,6 +650,7 @@ label op:
     ## CUT 10  17.813  夕景の坂道・2人の後ろ姿
     if op_wait(17.8125):
         jump op_done
+    $ op_cut(10)
     scene op_bg_twilight
     show op_stars_far at op_stars_appear
     show op_misaki_back at op_back_l
@@ -568,24 +660,26 @@ label op:
     ## CUT 11  18.750  Shooting Star!
     if op_wait(18.75):
         jump op_done
+    $ op_cut(11)
     $ op_flash()
     scene black
-    show expression Image("images/op/sunburst.png") as burst at op_spin
+    show expression Image("images/op/sunburst.png") as burst at op_spin, op_jolt
     show op_misaki_smile at op_bounce(30, 0.0)
     show op_touka_smile at op_bounce(310, 0.15, 60)
-    show op_spark at at_xy(40, 60), op_twinkle(0.0) as sp1
-    show op_spark at at_xy(560, 90), op_twinkle(0.5) as sp2
-    show op_spark at at_xy(300, 30), op_twinkle(0.8) as sp3
+    show op_spark at at_xy(40, 60), op_twinkle(0.0), op_jolt as sp1
+    show op_spark at at_xy(560, 90), op_twinkle(0.5), op_jolt as sp2
+    show op_spark at at_xy(300, 30), op_twinkle(0.8), op_jolt as sp3
     $ op_lyric(5)
 
     ## CUT 12  22.500  星降りの丘・流星群
     if op_wait(22.5):
         jump op_done
+    $ op_cut(12)
     $ op_flash()
     $ renpy.sound.play(audio.chime)  ## #80: 流星群の「チン」（12小節目頭は原曲 crash 外。4.2s→26.7s で CUT13 前着地）
     scene black
-    show op_bg_hill at op_hill_zoomout
-    show op_stars_far
+    show op_bg_hill at op_hill_zoomout, op_jolt
+    show op_stars_far at op_jolt
     show op_shoot_a
     show op_misaki_back at op_back_hill_l
     show op_touka_back at op_back_hill_r
@@ -610,6 +704,7 @@ label op:
     $ op_clear()
 
     ## CUT 13  26.250  タイトル・クレジット
+    $ op_cut(13)
     $ op_flash()
     scene op_bg_title
     show op_stars
@@ -617,7 +712,7 @@ label op:
     show op_credits_end at at_top_center(320, 330), op_credits
     show op_spark at at_xy(110, 110), op_twinkle(0.0) as sp1
     show op_spark at at_xy(500, 220), op_twinkle(0.5) as sp2
-    show op_shoot_a
+    show op_shoot_logo
     if op_wait(29.2):
         jump op_done
     show screen op_blackout

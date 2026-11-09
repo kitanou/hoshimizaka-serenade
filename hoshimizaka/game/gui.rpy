@@ -204,14 +204,16 @@ define gui.quick_button_text_selected_color = gui.accent_color
 ##
 ## Choice buttons are used in the in-game menus.
 
-define gui.choice_button_width = 360
+## #81: 幅拡大と文字 14 化。選択肢 4 個・長文でも 1 行に収まり、選択肢ブロックの
+## 上下伸縮が小さい（固定高さ廃止と組み合わせ、画面上端溢出＝クリック不能を防ぐ）
+define gui.choice_button_width = 440
 ## #81: 高さ固定を廃止（None=内容追従）。固定 34px だと選択肢が折り返したとき
 ## 2行目がボタン背景から溢れてキャラクターの顔に掛かっていた（t_touka_core2 実測）
 define gui.choice_button_height = None
 define gui.choice_button_tile = False
 define gui.choice_button_borders = Borders(10, 6, 10, 6)
 define gui.choice_button_text_font = gui.text_font
-define gui.choice_button_text_size = gui.text_size
+define gui.choice_button_text_size = 14
 define gui.choice_button_text_xalign = 0.5
 define gui.choice_button_text_idle_color = '#ffffff'
 define gui.choice_button_text_hover_color = '#ffffff'

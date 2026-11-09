@@ -59,6 +59,9 @@ testcase boot:
     pause until screen "op_cut_13"
     pause 0.55
     screenshot "t_op_13.png"
+    ## #81 絵コンテ §CUT13「星がロゴの上を一本横切る」の検証: 27.25s（通過中）
+    pause 0.7
+    screenshot "t_op_13_star.png"
     pause until screen "main_menu"
     pause 1.0
     screenshot "t_title.png"

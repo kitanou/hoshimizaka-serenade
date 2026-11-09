@@ -85,10 +85,16 @@ testcase route_misaki:
     advance until screen "choice"
     screenshot "t_choice4.png"
     click "もうどこにも行かない"
+    advance until screen "choice"
+    screenshot "t_choice5.png"
+    click "丘をミサキと下見する"
+    advance until screen "choice"
+    click "ミサキ（流星群の夜へ）"
     advance until screen "demo_end"
     pause 2.5
     screenshot "t_end_misaki.png"
     assert eval ("misaki" in persistent.endings_seen)
+    assert eval (renpy.store.misaki_aff == 5 and renpy.store.weekend_plan == "misaki")
 
 testcase route_touka:
     description "冬華予告ENDへ到達"
@@ -102,10 +108,15 @@ testcase route_touka:
     click "夜の屋上へ行く"
     advance until screen "choice"
     click "ひとりじゃない"
+    advance until screen "choice"
+    click "天体望遠鏡を冬華と整備する"
+    advance until screen "choice"
+    click "冬華（天文台の夜へ）"
     advance until screen "demo_end"
     pause 2.5
     screenshot "t_end_touka.png"
     assert eval ("touka" in persistent.endings_seen)
+    assert eval (renpy.store.touka_aff == 5 and renpy.store.fathernote)
 
 testcase route_normal:
     description "ノーマル予告ENDへ到達"
@@ -119,10 +130,16 @@ testcase route_normal:
     click "夜の坂のてっぺんへ行く"
     advance until screen "choice"
     click "それは……今はわからない"
+    advance until screen "choice"
+    click "家にこもって過去を思い出す"
+    advance until screen "choice"
+    screenshot "t_choice6.png"
+    click "この街へ（夏休み）"
     advance until screen "demo_end"
     pause 2.5
     screenshot "t_end_normal.png"
     assert eval ("normal" in persistent.endings_seen)
+    assert eval (renpy.store.weekend_plan == "none" and renpy.store.hill_memory)
 
 testcase ui_screens:
     description "設定・セーブ・ログ・おまけ画面のスクリーンショット"

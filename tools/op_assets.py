@@ -26,13 +26,31 @@ def render(svg, w, h):
 
 
 def reduce_colors(im, colors, dither):
-    """RGBA を減色する。アルファは 2 値化（ドット絵の縁にする）。"""
+    """RGBA を減色する。アルファは 2 値化（ドット絵の縁にする）。
+
+    #79: 背景プレート（320x240 を 2 倍 Nearest）と同じドット密度へ揃えるため、
+    半解像度で Bayer 固定ディザ量子化 → 2 倍 Nearest 拡大の 2px ブロック調にする。
+    （旧: 全解像度 Floyd-Steinberg。背景との密度差が絵コンテ §6 ルール4 の未完部分だった）
+    """
     a = np.asarray(im.getchannel("A"))
-    rgb = im.convert("RGB").quantize(colors=colors, method=Image.Quantize.MEDIANCUT,
-                                     dither=Image.Dither.FLOYDSTEINBERG if dither else Image.Dither.NONE).convert("RGB")
-    out = rgb.convert("RGBA")
+    if dither:
+        d = getattr(Image.Dither, "BAYER", None) or Image.Dither.ORDERED  # BAYER は Pillow 10.1 以降の別名（古いは ORDERED）
+        small = im.resize((max(1, im.width // 2), max(1, im.height // 2)), Image.LANCZOS)
+        rgb = small.convert("RGB").quantize(colors=colors, method=Image.Quantize.MEDIANCUT,
+                                            dither=d).convert("RGB")
+        out = rgb.resize(im.size, Image.NEAREST).convert("RGBA")
+    else:
+        out = im.convert("RGB").quantize(colors=colors, method=Image.Quantize.MEDIANCUT,
+                                         dither=Image.Dither.NONE).convert("RGB").convert("RGBA")
     out.putalpha(Image.fromarray(np.where(a >= 128, 255, 0).astype(np.uint8)))
     return out
+
+
+def dotify_existing(name, colors):
+    """再生成不可（ComfyUI 由来）な既存 PNG に同じ 2px ブロック調を後処理で適用する。"""
+    path = os.path.join(OUT, name)
+    im = Image.open(path).convert("RGBA")
+    save(reduce_colors(im, colors, True), name)
 
 
 def save(im, name):
@@ -85,6 +103,14 @@ def backs():
     raise SystemExit("後ろ姿は python -m tools.char_back install misaki|touka で作る")
 
 
+def dotify_backs():
+    """#79: 後ろ姿（ComfyUI 由来で再生成不可）を背景と同じ 2px ブロック調へ後処理。
+    2 回適用しても視差はほぼ出ない（半解像度 LANCZOS で旧ノイズが消えるため）。
+    char_back.py で作り直したら再度実行すること。"""
+    for name, n in (("chars/misaki_back.png", 48), ("chars/touka_back.png", 40)):
+        dotify_existing(name, n)
+
+
 def glow():
     n = 400
     yy, xx = np.mgrid[0:n, 0:n]
@@ -104,4 +130,5 @@ if __name__ == "__main__":
     # 後ろ姿は tools/char_back.py。ここでは glow だけ再生成しても害がない
     misaki()
     touka()
+    dotify_backs()
     glow()

@@ -126,9 +126,9 @@ transform op_eye_zoom_m:
     anchor (0.513, 0.561) pos (320, 250) zoom 1.75
     ease 1.8 zoom 1.55
 
-## CUT 06: 冬華（横顔→振り向き）
+## CUT 06: 冬華（横顔→振り向き）。#79: 左下隅で見切れていた位置を画面内へ持ち上げる
 transform op_touka_turn:
-    anchor (0.5, 0.0) pos (150, 40) zoom 1.2 xzoom 0.74 xoffset -14
+    anchor (0.5, 0.0) pos (185, 60) zoom 1.12 xzoom 0.72 xoffset -10
     pause 0.3
     ease 1.3 xzoom 1.0 xoffset 0
 
@@ -136,8 +136,10 @@ transform op_obs_drift:
     anchor (0.5, 0.5) pos (320, 240) zoom 1.04 xoffset 0
     linear 3.75 xoffset -12
 
-transform op_wind(delay, w):
-    xpos 700 alpha 0.9
+transform op_wind(delay, w, rot=0):
+    ## #79: 風ラインは傾き付き・半透明（不透明な直線3本は画面の傷に見えていた）
+    anchor (0.5, 0.5)
+    xpos 800 alpha 0.75 rotate rot
     pause delay
     linear 1.1 xpos -w
     repeat
@@ -177,9 +179,9 @@ transform op_back_l:
 transform op_back_r:
     anchor (0.0, 0.0) pos (300, 205) zoom 0.86 nearest True
 
-## CUT 11: サビ（バウンス＋髪のゆらぎ）
-transform op_bounce(x, delay):
-    anchor (0.0, 0.0) pos (x, 50) yoffset 300
+## CUT 11: サビ（バウンス＋髪のゆらぎ）。#79: y を引数化して2人の頭の位置を揃える
+transform op_bounce(x, delay, y=50):
+    anchor (0.0, 0.0) pos (x, y) yoffset 300
     pause delay
     ease 0.6 yoffset 0
     block:
@@ -321,49 +323,35 @@ image op_meteor_big:
     linear 0.3 alpha 1.0
     linear 1.5 pos (150, 330) alpha 0.0
 
-## ロゴ（CUT 03: 体験版 / CUT 13: 体験版 ver.0.97）
+## ロゴ（#79: タイトル画面と同じ gui/title_logo.png に統一。CUT 03 / CUT 13）
 image op_logo:
     contains:
-        Text("星見坂{size=42}の{/size}セレナーデ", size=62, bold=True, color="#ffd1e6",
-             outlines=[(5, "#2a0f5c", 0, 0), (5, "#ff2f86", 5, 5)])
-        anchor (0.5, 0.5) pos (320, 160) zoom 3.2 alpha 0.0
+        "gui/title_logo.png"
+        anchor (0.5, 0.5) pos (320, 150) zoom 2.8 alpha 0.0
         parallel:
             linear 0.2 alpha 1.0
         parallel:
-            ease 0.5 zoom 0.92
-            ease 0.18 zoom 1.04
+            ease 0.5 zoom 0.95
+            ease 0.18 zoom 1.05
             ease 0.12 zoom 1.0
     contains:
-        Text("HOSHIMIZAKA SERENADE", size=20, italic=True, color="#7fe3ff", kerning=7,
-             outlines=[(2, "#1a1050", 2, 2)])
-        anchor (0.5, 0.0) pos (320, 212) alpha 0.0
-        pause 0.35
-        linear 0.4 alpha 1.0
-    contains:
         Text("体験版", size=13, color="#ffffff", kerning=4, outlines=[(6, "#ff5fa2", 0, 0)])
-        anchor (0.5, 0.0) pos (320, 250) zoom 0.0
+        anchor (0.5, 0.0) pos (320, 226) zoom 0.0
         pause 0.6
         ease 0.3 zoom 1.2
         linear 0.1 zoom 1.0
 
 image op_logo_end:
     contains:
-        Text("星見坂{size=42}の{/size}セレナーデ", size=62, bold=True, color="#ffd1e6",
-             outlines=[(5, "#2a0f5c", 0, 0), (5, "#ff2f86", 5, 5)])
-        anchor (0.5, 0.5) pos (320, 160) zoom 1.25 alpha 0.0
+        "gui/title_logo.png"
+        anchor (0.5, 0.5) pos (320, 150) zoom 1.35 alpha 0.0
         parallel:
             linear 0.25 alpha 1.0
         parallel:
             ease 0.5 zoom 1.0
     contains:
-        Text("HOSHIMIZAKA SERENADE", size=20, italic=True, color="#7fe3ff", kerning=7,
-             outlines=[(2, "#1a1050", 2, 2)])
-        anchor (0.5, 0.0) pos (320, 212) alpha 0.0
-        pause 0.3
-        linear 0.4 alpha 1.0
-    contains:
         Text("体験版 ver.0.97", size=13, color="#ffffff", kerning=3, outlines=[(6, "#ff5fa2", 0, 0)])
-        anchor (0.5, 0.0) pos (320, 250) alpha 0.0
+        anchor (0.5, 0.0) pos (320, 226) alpha 0.0
         pause 0.6
         linear 0.3 alpha 1.0
 
@@ -386,7 +374,8 @@ image op_credits_end:
     Text("原画・シナリオ・音楽　星屑工房\n主題歌「流れ星エチュード」", size=12, color="#dfe6ff", kerning=3, text_align=0.5, line_spacing=6)
 
 image op_wind_line:
-    Solid("#ffffffd8", xysize=(300, 2))
+    ## #79: 白不透明→淡い半透明（傷のように強かった）
+    Solid("#dfe6ff80", xysize=(300, 2))
 
 ## 流星群（CUT 12: 最初は数本、徐々に増やす。速度と長さを変える）
 image op_shoot_a:
@@ -514,8 +503,10 @@ label op:
         jump op_done
     $ op_flash()
     scene black
-    show expression Tile("images/op/stripes.png", size=(832, 480)) as stripes at op_stripes_scroll
-    show op_circle_img at at_xy(200, 40)
+    ## #79: im.Tile + size 指定が画面を覆い切らず右端に縦の黒帯が出ていた（t_op_04 実測）。
+    ## stripes.png は 832x480 の単板なので Image でそのまま置き、96px 周期でスライドさせる
+    show expression Image("images/op/stripes.png") as stripes at op_stripes_scroll
+    show op_circle_img at at_xy(110, 40)
     show op_misaki_smile at op_misaki_intro
     show op_name_misaki at at_xy(60, 40), op_drop_in
     $ op_lyric(2)
@@ -534,9 +525,8 @@ label op:
     $ op_flash()
     scene black
     show op_bg_observatory at op_obs_drift
-    show op_wind_line at at_xy(0, 90), op_wind(0.0, 300) as w1
-    show op_wind_line at at_xy(0, 180), op_wind(0.4, 420) as w2
-    show op_wind_line at at_xy(0, 300), op_wind(0.8, 260) as w3
+    show op_wind_line at at_xy(0, 120), op_wind(0.0, 460, 4) as w1
+    show op_wind_line at at_xy(0, 320), op_wind(0.6, 460, -4) as w2
     show op_touka_turn at op_touka_turn
     show op_name_touka at at_xy(530, 40), op_drop_in
     $ op_lyric(3)
@@ -580,7 +570,7 @@ label op:
     scene black
     show expression Image("images/op/sunburst.png") as burst at op_spin
     show op_misaki_smile at op_bounce(30, 0.0)
-    show op_touka_smile at op_bounce(310, 0.15)
+    show op_touka_smile at op_bounce(310, 0.15, 60)
     show op_spark at at_xy(40, 60), op_twinkle(0.0) as sp1
     show op_spark at at_xy(560, 90), op_twinkle(0.5) as sp2
     show op_spark at at_xy(300, 30), op_twinkle(0.8) as sp3

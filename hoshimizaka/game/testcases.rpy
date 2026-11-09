@@ -503,7 +503,8 @@ testcase qa_assets:
             assert abs(_st - (2 + 2 * _i) * _bar) < 1e-6, (_i, _st)
         assert abs(16 * _bar - 30.0) < 1e-6
         for _i in range(1, 14):
-            assert renpy.display.screen.get_screen("op_cut_%02d" % _i) is not None, _i
+            # get_screen_variant は「定義済み画面」の参照（get_screen は表示中のもの）
+            assert renpy.display.screen.get_screen_variant("op_cut_%02d" % _i) is not None, _i
     # セーブデータ: スロット書込み→json読出→削除のラウンドトリップ（周回継続の機構確認。詳細は save_load）
     run Jump("start")
     advance until screen "choice"

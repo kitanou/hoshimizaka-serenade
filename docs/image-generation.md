@@ -22,6 +22,11 @@
 - Apple M5 Max 64GB, macOS, Python 3.12, torch 2.15.0 (MPS)
 - ComfyUI `fca60fe`（2026-11-09 に ~/ComfyUI へ再構築。旧環境は orca workspaces の掃除で消失したため、
   常設配置は `~/ComfyUI`、`COMFY_DIR=~/ComfyUI` で使う。モデル 4 点は下表と同じファイルへ再ダウンロード済み）
+- モデル実体（約15GB）は 2026-11-09 に外付け NVMe SSD へ移設した。配置は `/Volumes/WD_BLACK SN770/models/ComfyUI/`、
+  `~/ComfyUI/models` はそこへのシンボリックリンク。使う前にドライブのマウントが必要（未マウントだと
+  ComfyUI がモデルを見つけられない）。速度は実測で内蔵と同等（夜背景 seed8 全生成 27.2s、チェックポイント・
+  ControlNet とも `/Volumes/…` 直通でロード）。ComfyUI のログに `Model storage policy: fast_disk=False`
+  と出るのは無害。削除済みの `~/ComfyUI/output|input` や生成中間物（`output/`）は git 管理外。再生成は上の手順どおり
 - custom_nodes: `ComfyUI_IPAdapter_plus` `a0f451a`, `comfyui_controlnet_aux` `a587a4c`
 
 | 種類 | ファイル（`ComfyUI/models/…`） |

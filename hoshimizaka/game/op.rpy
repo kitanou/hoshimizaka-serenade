@@ -474,6 +474,7 @@ label op:
     if op_wait(1.875):
         jump op_done
     $ op_flash()
+    $ renpy.sound.play(audio.shoot)  ## #80: 流星のきらめき（絵コンテ §5 許可範囲。音量は sfx mixer）
     scene op_bg_starry
     show op_stars_far
     show op_meteor_big
@@ -523,6 +524,7 @@ label op:
     if op_wait(11.25):
         jump op_done
     $ op_flash()
+    $ renpy.sound.play(audio.wind)  ## #80: 風の余白（2.5s。原曲のドラム不在小節を埋める）
     scene black
     show op_bg_observatory at op_obs_drift
     show op_wind_line at at_xy(0, 120), op_wind(0.0, 460, 4) as w1
@@ -580,6 +582,7 @@ label op:
     if op_wait(22.5):
         jump op_done
     $ op_flash()
+    $ renpy.sound.play(audio.chime)  ## #80: 流星群の「チン」（12小節目頭は原曲 crash 外。4.2s→26.7s で CUT13 前着地）
     scene black
     show op_bg_hill at op_hill_zoomout
     show op_stars_far
@@ -620,9 +623,11 @@ label op:
     show screen op_blackout
     if op_wait(29.8):
         jump op_done
-    stop music fadeout 0.2
     if op_wait(30.0):
         jump op_done
+    ## #80: op.ogg 自体が 30.0s で 0.4s 実体フェード終了（tools/render_audio.py）。
+    ## ここ実体曲に合わせた no-op 相当の stop（監査の fadeout 必須は維持）
+    stop music fadeout 0.2
     jump op_end
 
 label op_done:

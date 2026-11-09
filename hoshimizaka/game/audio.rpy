@@ -20,6 +20,9 @@ define audio.heart = "audio/se/heart.ogg"
 
 define config.sample_sound = "audio/se/select.ogg"
 define config.main_menu_music = audio.title
+## #80: タイトル BGM は 1.0s fadein で出現（OP 終了無音からの急出現を解消）。
+## Ren'Py 標準の config.main_menu_music_fadein（00start.rpy が if_changed+fadein で再生）
+define config.main_menu_music_fadein = 1.0
 define config.automatic_images = None
 define config.has_autosave = True
 define config.window_title = "星見坂のセレナーデ　体験版"

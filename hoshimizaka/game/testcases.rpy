@@ -10,39 +10,58 @@ testsuite global:
 testcase boot:
     description "起動→BIOS→OP（全13カットの中間でスクリーンショット）→タイトル"
     $ _test.transition_timeout = 0.05
-    # OP は固定長シーケンス。until の既定 5s と綱引きで間欠的に超えるため余裕を取る（2026-11-09 flake 対応）
+    # OP は固定長シーケンス。カットアンカー (op_cut_NN) 待ちの最大間隔は 3.75s+α。
+    # 低速マシンでも超えないよう余裕を取る（2026-11-09 flake 対応）
     $ _test.timeout = 15
     $ persistent.op_seen = False
     pause until screen "bios_boot"
     pause 2.5
     screenshot "t_bios.png"
     keysym "K_RETURN"
-    pause 1.00
+    ## #81: カットアンカー画面（op_cut_NN）起点で撮影。累積 pause の綱引きをやめ、
+    ## 各カットの +0.55s（シェイク収束後）の同一位相で撮る。再実行で同じカットが撮れる
+    pause until screen "op_cut_01"
+    pause 0.55
     screenshot "t_op_01.png"
-    pause 1.50
+    pause until screen "op_cut_02"
+    pause 0.55
     screenshot "t_op_02.png"
-    pause 2.50
+    pause until screen "op_cut_03"
+    pause 0.55
     screenshot "t_op_03.png"
-    pause 3.50
+    pause until screen "op_cut_04"
+    pause 0.55
     screenshot "t_op_04.png"
-    pause 1.80
+    pause until screen "op_cut_05"
+    pause 0.55
     screenshot "t_op_05.png"
-    pause 2.70
+    pause until screen "op_cut_06"
+    pause 0.55
     screenshot "t_op_06.png"
-    pause 2.45
+    pause until screen "op_cut_07"
+    pause 0.55
     screenshot "t_op_07.png"
-    pause 0.95
+    pause until screen "op_cut_08"
+    pause 0.55
     screenshot "t_op_08.png"
-    pause 0.90
+    pause until screen "op_cut_09"
+    pause 0.55
     screenshot "t_op_09.png"
-    pause 0.80
+    pause until screen "op_cut_10"
+    pause 0.55
     screenshot "t_op_10.png"
-    pause 2.20
+    pause until screen "op_cut_11"
+    pause 0.55
     screenshot "t_op_11.png"
-    pause 3.50
+    pause until screen "op_cut_12"
+    pause 0.55
     screenshot "t_op_12.png"
-    pause 4.00
+    pause until screen "op_cut_13"
+    pause 0.55
     screenshot "t_op_13.png"
+    ## #81 絵コンテ §CUT13「星がロゴの上を一本横切る」の検証: 27.25s（通過中）
+    pause 0.7
+    screenshot "t_op_13_star.png"
     pause until screen "main_menu"
     pause 1.0
     screenshot "t_title.png"
@@ -478,6 +497,17 @@ testcase qa_assets:
             renpy.loader.load(_p)
         for _bid, _t, _p in renpy.store.BGM_ROOM:
             renpy.loader.load(_p)
+    # OP 歌詞・カット仕様（#81。絵コンテ §2/§8/§9 のデータ側担保）:
+    # 歌詞6行、歌い出しは (2+2i) 小節目 (=3.75s 間隔)、16小節=30.0s、カットアンカー画面は13
+    assert eval (len(renpy.store.OP_LYRICS) == 6)
+    python:
+        _bar = 60.0 / 128.0 * 4
+        for _i, (_txt, _st, _du) in enumerate(renpy.store.OP_LYRICS):
+            assert abs(_st - (2 + 2 * _i) * _bar) < 1e-6, (_i, _st)
+        assert abs(16 * _bar - 30.0) < 1e-6
+        for _i in range(1, 14):
+            # get_screen_variant は「定義済み画面」の参照（get_screen は表示中のもの）
+            assert renpy.display.screen.get_screen_variant("op_cut_%02d" % _i) is not None, _i
     # セーブデータ: スロット書込み→json読出→削除のラウンドトリップ（周回継続の機構確認。詳細は save_load）
     run Jump("start")
     advance until screen "choice"

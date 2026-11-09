@@ -218,8 +218,10 @@ style choice_button_text is button_text
 
 style choice_vbox:
     xalign 0.5
-    ypos 135
-    yanchor 0.5
+    ## #81: 下端基準。選択肢が折り返しで伸びても上へ広がり、キャラクターの
+    ## 頭部（t_touka_core2 で y≈190 以降と実測）に被らない
+    ypos 190
+    yanchor 1.0
 
     spacing gui.choice_spacing
 

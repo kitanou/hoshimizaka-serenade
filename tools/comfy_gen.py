@@ -181,10 +181,11 @@ def build_workflow(a):
     pos = w.add("CLIPTextEncode", clip=clip, text=pos_txt)
     neg = w.add("CLIPTextEncode", clip=clip, text=a.negative or NEG)
 
-    # IP-Adapter: 頭部（色・顔）と全身（服・シルエット）を正方形で与える
+    # IP-Adapter: 頭部（色・顔）と全身（服・シルエット）を正方形で与える。
+    # --ip-refs で参照画像名（input 内）を差し替えられる（他キャラの CG など。tools/cg_gen.py）
     if a.ip_weight > 0:
         ipl = w.add("IPAdapterUnifiedLoader", model=model, preset=IPADAPTER_PRESET)
-        refs = [IN_HEAD_SQ] if a.preset == "expr" else [IN_HEAD_SQ, IN_FIG_SQ]
+        refs = getattr(a, "ip_refs", None) or ([IN_HEAD_SQ] if a.preset == "expr" else [IN_HEAD_SQ, IN_FIG_SQ])
         imgs = [w.add("LoadImage", image=r) for r in refs]
         img = imgs[0]
         if len(imgs) > 1:
@@ -331,6 +332,8 @@ def add_gen_args(g):
                    help="stand: img2img 強度（既定 0.5） / expr: 顔 inpaint 強度（既定 0.8）")
     g.add_argument("--refine", type=float, default=0.35, help="expr: ①清書パスの denoise（0 で無効）")
     g.add_argument("--ip-weight", type=float, default=0.6)
+    g.add_argument("--ip-refs", nargs="*", default=None,
+                   help="IP-Adapter 参照画像（ComfyUI/input 内のファイル名）。既定は美咲の head/fig")
     g.add_argument("--cn-weight", type=float, default=0.6)
     g.add_argument("--cn-end", type=float, default=0.8)
     g.add_argument("--width", type=int, default=None, help="bg: 生成幅（既定 1152）")

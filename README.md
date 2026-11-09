@@ -125,4 +125,4 @@ gh release create v0.97 \
 
 - 日本語フォントは Ren'Py SDK 同梱の Source Han Sans Lite（SIL OFL）。
 - ミサキの立ち絵は `docs/images/character-misaki.webp`（参考画像）から表情6種のバストアップを切り出したもの（`python -m tools.import_misaki`）。
-- 冬華・楓の立ち絵と本編背景は ComfyUI 生成（手順は [docs/image-generation.md](docs/image-generation.md) / [docs/background-art-spec.md](docs/background-art-spec.md)）。イベント CG と音楽は本リポジトリのツールによる手続き生成（仮素材）。
+- 冬華・楓の立ち絵、本編背景、予告END のイベントCG3枚は ComfyUI 生成（手順は [docs/image-generation.md](docs/image-generation.md) / [docs/background-art-spec.md](docs/background-art-spec.md)）。音楽と一部 OP 素材は本リポジトリのツールによる手続き生成（仮素材）。

@@ -90,11 +90,46 @@ testcase route_misaki:
     click "丘をミサキと下見する"
     advance until screen "choice"
     click "ミサキ（流星群の夜へ）"
+    advance until screen "choice"
+    screenshot "t_misaki_core1.png"
+    click "覚えていない、と正直に認める"
+    advance until screen "choice"
+    screenshot "t_misaki_core2.png"
+    click "約束のせいじゃない。お前が見たいんだ"
     advance until screen "demo_end"
     pause 2.5
-    screenshot "t_end_misaki.png"
-    assert eval ("misaki" in persistent.endings_seen)
+    screenshot "t_end_misaki_good.png"
+    assert eval ("misaki_good" in persistent.endings_seen)
     assert eval (renpy.store.misaki_aff == 5 and renpy.store.weekend_plan == "misaki")
+    assert eval (renpy.store.misaki_honest)
+
+testcase route_misaki_bad:
+    description "ミサキルート BAD END（七年目のすれ違い）へ到達"
+    $ _test.transition_timeout = 0.05
+    run Jump("start")
+    advance until screen "choice"
+    click "ミサキといっしょに帰る"
+    advance until screen "choice"
+    click "屋上でミサキとお弁当"
+    advance until screen "choice"
+    click "夜の坂のてっぺんへ行く"
+    advance until screen "choice"
+    click "もうどこにも行かない"
+    advance until screen "choice"
+    click "丘をミサキと下見する"
+    advance until screen "choice"
+    click "ミサキ（流星群の夜へ）"
+    advance until screen "choice"
+    click "覚えていない、と正直に認める"
+    advance until screen "choice"
+    screenshot "t_misaki_core2_bad.png"
+    click "約束があったから、ここへ来た"
+    advance until screen "demo_end"
+    pause 2.5
+    screenshot "t_end_bad_misaki.png"
+    assert eval ("bad_misaki" in persistent.endings_seen)
+    # 注: endings_seen はケース間で persistent に永続するため "misaki_good 未視聴" は検証しない
+    # （検証するのは run_tests.sh のケース順: 先に GOOD、次に BAD で別プレイの別 END に到達すること）
 
 testcase route_touka:
     description "冬華予告ENDへ到達"

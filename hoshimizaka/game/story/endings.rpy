@@ -49,7 +49,7 @@ label end_normal:
     show misaki smile at pos_l with dissolve
     show touka normal at pos_r with dissolve
     to "……晴れた。記録を、余すところなく書けるわ"
-    mi "ユウくん、ぼくの分まで数えてね！　四十こえたら、お願いごと、ひとつきくって約束"
+    mi "ユウくん、わたしの分まで数えてね！　四十こえたら、お願いごと、ひとつきくって約束"
     yu "四十でいいのかな。……何をお願いするつもり"
     mi "――さあね"
 

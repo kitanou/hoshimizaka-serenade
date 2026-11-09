@@ -186,11 +186,11 @@ issue #28 の指示（条件をコードへ直書きせず route-flow.md へ明�
 
 ```python
 # day5 選択⑥ 直前（story/day5.rpy）:
-$ seen_good_both = ("misaki_good" in persistent.endings_seen and "touka_good" in persistent.endings_seen)
-# ⑥メニューに特別選択肢（条件表示ゲート）:
-#   "みんなの丘（八月十二日の夜）" if seen_good_both:
-#       $ star_promise = True
-#       jump true_route
+$ seen_good_both = gate_true(persistent.endings_seen)   # 判定は logic.rpy の純関数に集約（#43）
+# ⑥メニューの条件ゲート（3つとも logic.rpy の純関数。境界値・真理表は testcase route_logic が直接検査）:
+#   "みんなの丘（八月十二日の夜）" if gate_true(...)            # 両 GOOD 視聴（persistent）のみ
+#   "ミサキ（流星群の夜へ）"       if gate_misaki(promised_misaki, misaki_aff)  # ④a約束 ∧ aff>=AFF_GATE(4)
+#   "冬華（屋上の観測夜へ）"       if gate_touka(joined_astro, touka_aff)       # 天文部参加 ∧ aff>=AFF_GATE(4)
 # → star_promise は TRUE 進入時にのみ立つフラグ。分岐後は単線（失敗状態なし）
 ```
 

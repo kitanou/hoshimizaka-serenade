@@ -152,6 +152,7 @@ label tr4_final:
     "『星見坂のセレナーデ』——何年かけても届く光と、それでも届ける人たちの、長い返事の物語。"
     "この夏の物語は、まだ序章のはじまりにすぎない。——1996年 冬 発売予定!? の本編で、その続きを。"
     $ persistent.endings_seen.add("true_end")
+    $ persistent.cg_seen.add("normal_end")
     jump demo_end_card_true
 
 label demo_end_card_true:

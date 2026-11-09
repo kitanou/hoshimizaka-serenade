@@ -229,6 +229,7 @@ label end_misaki_good:
     yu "……約束の答えは、来年も、その先も、言い続けていくことのようだ"
     mi "――うん。長い答えで、いいよ。……ながいセレナーデ、だね"
     $ persistent.endings_seen.add("misaki_good")
+    $ persistent.cg_seen.add("misaki_end")
     jump demo_end_card_misaki_good
 
 ## ---- BAD END  『七年目のすれ違い』 ----

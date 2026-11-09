@@ -5,8 +5,14 @@
 # usage: tools/run_tests.sh [RENPY_SDK_DIR]   （既定: ~/renpy-sdk）
 SDK="${1:-$HOME/renpy-sdk}"
 PROJ="$(cd "$(dirname "$0")/.." && pwd)/hoshimizaka"
-CASES="boot prologue_shots route_misaki route_misaki_bad route_touka route_touka_bad route_normal true_end true_locked ui_screens prefs_restore save_load"
+CASES="boot prologue_shots route_misaki route_misaki_bad route_touka route_touka_bad route_normal true_end true_locked ui_screens prefs_restore save_load gallery route_logic audio qa_assets"
 fail=0
+# 静的監査（#41 音響方針・docs/audio-design.md）。違反があってもテストは止せず FAIL として計上する
+if python3 "$(dirname "$0")/audio_audit.py"; then
+  echo "PASS  audio_audit"
+else
+  echo "FAIL  audio_audit"; fail=1
+fi
 for c in $CASES; do
   LOG="/tmp/renpy_test_$(basename "$(dirname "$PROJ")")_$c.log"
   timeout 100 "$SDK/renpy.sh" "$PROJ" test "$c" --hide-header --overwrite-screenshots >"$LOG" 2>&1 &

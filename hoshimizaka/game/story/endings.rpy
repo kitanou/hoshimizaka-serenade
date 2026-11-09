@@ -14,6 +14,7 @@ label end_misaki:
     "ひとすじの流れ星が、星見坂の空をよこぎる。"
     "この夏の物語は、まだ始まったばかりだ。"
     $ persistent.endings_seen.add("misaki")
+    $ persistent.cg_seen.add("misaki_end")
     jump demo_end_card_misaki
 
 label end_touka:
@@ -30,6 +31,7 @@ label end_touka:
     "ひとすじの流れ星が、屋上の空をよこぎる。"
     "この夏の物語は、まだ始まったばかりだ。"
     $ persistent.endings_seen.add("touka")
+    $ persistent.cg_seen.add("touka_end")
     jump demo_end_card_touka
 
 label end_normal:
@@ -75,6 +77,7 @@ label end_normal:
     "それでも、この空のもとへは、また来年も、たぶん二人とも来る。それだけで、十分だった。"
     "この街の星の物語は、まだ序章のはじまりにすぎない。"
     $ persistent.endings_seen.add("normal")
+    $ persistent.cg_seen.add("normal_end")
     jump demo_end_card_normal
 
 label demo_end_card_misaki:

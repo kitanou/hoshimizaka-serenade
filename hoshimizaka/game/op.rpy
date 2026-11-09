@@ -32,12 +32,19 @@ init python:
         return t
 
     def op_wait(t):
-        """OP 時刻が t 秒になるまで待つ。クリック/Enter で中断されたら True。"""
+        """OP 時刻が t 秒になるまで待つ。クリック/Enter で中断されたら True。
+
+        #81: 冒頭 1.2s 未満の中断要求は握り潰す。BIOS 画面を消す Enter が
+        OP 最初の interaction に届いて誤スキップになる事故を実測で防止
+        （boot テストの keysym K_RETURN でも再現）。人のクリックスキップは
+        1.2s（1小節目頭）以降に効く。"""
         while True:
             d = t - op_time()
             if d <= 0:
                 return False
             if renpy.pause(min(d, 0.2)):
+                if op_time() < 1.2:
+                    continue
                 return True
 
     def op_flash():

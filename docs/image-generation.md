@@ -20,7 +20,8 @@
 ## 環境
 
 - Apple M5 Max 64GB, macOS, Python 3.12, torch 2.15.0 (MPS)
-- ComfyUI `0decb39`（2026-11-08）
+- ComfyUI `fca60fe`（2026-11-09 に ~/ComfyUI へ再構築。旧環境は orca workspaces の掃除で消失したため、
+  常設配置は `~/ComfyUI`、`COMFY_DIR=~/ComfyUI` で使う。モデル 4 点は下表と同じファイルへ再ダウンロード済み）
 - custom_nodes: `ComfyUI_IPAdapter_plus` `a0f451a`, `comfyui_controlnet_aux` `a587a4c`
 
 | 種類 | ファイル（`ComfyUI/models/…`） |
@@ -127,10 +128,45 @@ python -m tools.gen_rpy             # images.rpy を再生成
 
 背景透過: 外周から連続する白を透過。バストは白い制服が下辺に接するため、下 30% は行ごとに最左〜最右のインク間を不透明化。アルファは 2 値。
 
+## イベントCG（tools/cg_gen.py、Issue #85）
+
+予告END の CG 3 枚（`misaki_end` / `touka_end` / `normal_end`、1280x960）。
+bg_gen と同じラスター化（640x480 で 96 色 ordered dither → Nearest 2 倍）だが、**作り方は 2 段階**。
+
+1. **場面**: bg_gen で採用済みの ComfyUI 夜背景をシーンとしてそのまま使う
+   （misaki_end ← `night` s8、touka_end ← `rooftop_night` s9、normal_end ← `slope_night` s8）。
+   ゲーム本編の背景と完全に一致する。`output/cg/scenes/` にコピーを置く（git 管理外）。
+2. **人物**: comfy_gen の `expr` プリセット（inpaint 配線）を init/mask/positive を差し替けて実行。
+   楕円マスク（`G.face_mask`）+ IP-Adapter（美咲 `ms_head_sq` / 冬華 `tk_head_sq`、weight 0.6〜0.7）で
+   人物だけ描き足す。normal_end は 2 人を**別マスクの直列 inpaint**（髪色の取り違え防止）。
+
+```sh
+COMFY_DIR=~/ComfyUI $PY -m tools.cg_gen prep_refs   # 冬華 head 正方形（output/touka/base.png から）
+$PY -m tools.cg_gen stage misaki_end --seed 7       # 1 本鎖 → output/cg/expr/<id>_s<seed>.png
+$PY -m tools.cg_gen sheet                          # seed 比較 → 採用 seed を CHOSEN に記録
+$PY -m tools.cg_gen raster all && $PY -m tools.cg_gen install all
+```
+
+- **採用 seed**: misaki_end 7（丘で振り向く笑顔、赤リボン視認）/ touka_end 5（屋上＋三日月、笑顔・赤リボン）/
+  normal_end 17（夜の坂で横向きに並んで空を見上げる頭肩ショット。`CHOSEN` 辞書に記録）。
+- **txt2img 一発は失敗**（seed 5〜9、git 履歴にコードあり）: 夜景タグが人物タグに負けて昼空になる
+  （IP-Adapter 0.5 でも同様の傾向）、2 人 CG は髪色交換・シルエット化。→ 2 段階方式に切替。
+- **normal_end の 2 人inpaint は後ろ姿で破綻し続けた**（全 seed で冬華が髪だけの塊。very long hair が
+  マスク幅いっぱいに膨らむ）。マスクを細める・体/制服語彙を足す（seed 8〜13）でも直らず、
+  **横向き（profile）の頭肩ショット**に構図を変えて解消（seed 14〜18）。後ろ姿を諦めた代償として
+  美咲の眼鏡は横向きでは視認できない（夜のカットとして許容）。
+- **小道具の望遠鏡は描けない**（rooftop_night の背景 seed 5 種でも実績なし。bg 仕様 §7 の小道具課題と同一）。
+  touka_end は望遠鏡なしの「屋上＋月＋冬華」で確定。脚本の台詞（「望遠鏡と、ふたつの影」）で補う。
+- 逆光風の** halo（髪周围の白ボケ）** が出る。640x480 + 96 色 dither まで落とすと月光の逆光として
+  成立する範囲。気になるなら `NIGHT_LIT` の `rim light` を外す。
+- 流れ星は CG に焼き込まない。endings.rpy 側で `shoot_fx` / `shoot_fx2`（transforms.rpy の ATL）を重ねる。
+  桜吹雪と同様の fx 分担（OP 背景の `no meteors` 方針と同じ）。
+- `tools/gen_images.py` の `gen_cg` は旧プレースホルダ。一括実行では作らず、明示指定時のみ（bg と同じ_gate_）。
+
 ## 既知の課題・次の一手
 
 - 眼鏡フレームが参考（細いグレー）より太く黒い。6 種で統一はされている。マスクから眼鏡を外す方法も候補。
 - 64 色だと肌がややピンク寄りになる。`--colors 96〜128` も比較候補。
 - **`pose`（ゼロから構図を作る生成）はまだ参考に似ない**: 髪が明るい、目が赤い、リボンがスカーフ状、靴下が長い（`--ip-weight 0.85` でも同様）。参考画像を初期画像にできないため。美咲専用 LoRA（stand/expr の出力を学習素材に）で解決するのが本筋。
-- 背景は `tools/bg_gen.py` で生成する（手順・プロンプトは [background-art-spec.md](background-art-spec.md)）。イベント CG は未着手。
-- 立ち絵 3 人（ミサキ・冬華・楓）は ComfyUI の layeredimage 素材で確定。手続き生成の立ち絵（`tools/gen_images.py`）は差し替え用の仮素材として残している。次はイベント CG（3 枚とも手続き生成のまま）が候補。
+- 背景は `tools/bg_gen.py` で生成する（手順・プロンプトは [background-art-spec.md](background-art-spec.md)）。イベント CG も `tools/cg_gen.py` で ComfyUI 化済み（Issue #85、上の項）。
+- 立ち絵 3 人（ミサキ・冬華・楓）は ComfyUI の layeredimage 素材で確定。手続き生成の立ち絵（`tools/gen_images.py`）は差し替え用の仮素材として残している。残る手続き生成素材（OP の顔アップ系など）の見直しは必要になったら別 Issue で。

@@ -7,12 +7,14 @@ label end_misaki:
     "――四月の終わり。それからの日々は、あっという間に過ぎていった。"
     "夏が近づくたびに、ミサキは坂のてっぺんで空を見上げるようになった。"
     scene cg misaki_end with Dissolve(1.5)
+    show shoot_fx
     play sound audio.shoot
     mi "ねえ、ユウくん。もし本当に、三十年ぶりの流れ星が降ったら……今度は、わたしからお願いしてもいい？"
     yu "ああ。何でも言ってくれ。"
     mi "……ううん。やっぱり、そのときまで内緒♪"
     "ひとすじの流れ星が、星見坂の空をよこぎる。"
     "この夏の物語は、まだ始まったばかりだ。"
+    hide shoot_fx
     $ persistent.endings_seen.add("misaki")
     $ persistent.cg_seen.add("misaki_end")
     jump demo_end_card_misaki
@@ -24,12 +26,14 @@ label end_touka:
     "――四月の終わり。天文部は、三人目の部員を迎えた。"
     "夜の屋上には、望遠鏡と、ふたつの影。"
     scene cg touka_end with Dissolve(1.5)
+    show shoot_fx
     play sound audio.shoot
     to "ねえ、相沢くん。父が見たかった空は、きっとこんな空だったのだと思うの。"
     yu "なら、夏に本物を見よう。ふたりで。"
     to "……ふたり、で。ええ。約束よ。"
     "ひとすじの流れ星が、屋上の空をよこぎる。"
     "この夏の物語は、まだ始まったばかりだ。"
+    hide shoot_fx
     $ persistent.endings_seen.add("touka")
     $ persistent.cg_seen.add("touka_end")
     jump demo_end_card_touka
@@ -67,6 +71,8 @@ label end_normal:
 
     "――その夜、星見坂の空を、四つをこえる流星が横切った。"
     scene cg normal_end with Dissolve(1.5)
+    show shoot_fx
+    show shoot_fx2
     play sound audio.shoot
     mi "見て見て！　すっごく明るいのが、ひとつ――"
     to "……記録できた。観測は、成功よ"
@@ -76,6 +82,8 @@ label end_normal:
     "俺は、どちらの隣にも立たなかった。二つの約束を、今はまだ、両方にしまっておく。"
     "それでも、この空のもとへは、また来年も、たぶん二人とも来る。それだけで、十分だった。"
     "この街の星の物語は、まだ序章のはじまりにすぎない。"
+    hide shoot_fx
+    hide shoot_fx2
     $ persistent.endings_seen.add("normal")
     $ persistent.cg_seen.add("normal_end")
     jump demo_end_card_normal

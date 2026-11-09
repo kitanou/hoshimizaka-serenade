@@ -314,10 +314,11 @@ def gen_ui_parts():
 def main():
     only = set(sys.argv[1:])
     steps = dict(bg=gen_backgrounds, chars=gen_sprites, cg=gen_cg, fx=gen_fx, op=gen_op_art, ui=gen_ui, parts=gen_ui_parts)
-    # 背景（bg）は ComfyUI 生成（tools/bg_gen.py, docs/background-art-spec.md）に移行したので、
-    # 引数なしの一括実行では作り直さない（旧ベクター調で上書きしてしまうため）。明示 `bg` 指定のみ。
+    # 背景（bg）は ComfyUI 生成（tools/bg_gen.py, docs/background-art-spec.md）、イベント CG（cg）は
+    # tools/cg_gen.py（Issue #85）に移行した。引数なしの一括実行では作り直さない（旧ベクター調の
+    # プレースホルダで上書きしてしまうため）。明示 `bg` / `cg` 指定のみ実行。
     for k, fn in steps.items():
-        if k in only or (not only and k != "bg"):
+        if k in only or (not only and k not in ("bg", "cg")):
             fn()
 
 

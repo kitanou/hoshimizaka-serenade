@@ -222,6 +222,10 @@ init python:
     # dists をプロジェクト内に置く場合、再生成前に dists を空にすること（2026-11-09 実測: 旧zipが扫描され混入）。
     # 対策として dists/ と開発ログ類も除外宣言（cache の bytecode 自体は Ren'Py がビルド過程で書き出す起動高速化目的の副産物で約0.5MB）
     build.classify("dists/**", None)
+    # tests/ は自動テスト基盤（git 管理外の比較スクショ 約23MB を含む）。#48 衛生方針で配布除外
+    # （v0.99 ビルド実測で tests/screenshots 58ファイルが mac.zip に混入していた。2026-11-09）
+    build.classify("tests/*", None)
+    build.classify("tests/**", None)
     build.classify("log.txt", None)
     build.classify("errors.txt", None)
     build.classify("traceback.txt", None)

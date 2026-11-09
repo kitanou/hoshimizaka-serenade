@@ -75,7 +75,7 @@ flowchart TD
     C5 -- 冬華と望遠鏡整備<br/>T+1, weekend_plan=touka, fathernote --> D5
     C5 -- 家にこもる<br/>weekend_plan=none, hill_memory --> D5
     D5[day5 4/15→8/11 圧縮<br/>5月:部員3人/6月:審査通過<br/>7月:カウントダウン/8/11:3つの影] --> C6{"選択⑥ 8/12の夜<br/>(条件表示ゲート)"}
-    C6 -- "ミサキ（流星群の夜へ）<br/>if promised_misaki ∧ aff>=4" --> RM[route_misaki<br/>プレースホルダ→end_misaki(#26へ差替)]
+    C6 -- "ミサキ（流星群の夜へ）<br/>if promised_misaki ∧ aff>=4" --> RM[route_misaki<br/>#26 実装済み: misaki_m1→m2(M-core-1)→m3(M-core-2)<br/>→ GOOD/BAD END]
     C6 -- "冬華（天文台の夜へ）<br/>if joined_astro ∧ aff>=4" --> RT[route_touka<br/>プレースホルダ→end_touka(#27へ差替)]
     C6 -- "この街へ（常時表示）" --> EN[end_normal 拡大<br/>8/12全員観測・NORMAL]
 ```
@@ -89,7 +89,11 @@ flowchart TD
 | `day4_teach_touka` | 4/13 | 父の1966年観測ノートと欄外「丘にて、彼女と。三十年後、必ず」（fathernote） | clubroom | touka / page | — |
 | `day4_homealone` | 4/13 | 子どもらしい筆跡の「7年後の約束」発見、夜の坂でミサキと合流（hill_memory） | home / slope_night | day, evening | — |
 | `day5` | 4/15→8/11 | 圧縮ブリッジ（date_card テロップ）: 5月=部員3人（joined_astro で対話分岐）/6月=審査通過/7月=カウントダウン（if で対話分岐）/8/11=3つの影 | classroom / clubroom / hallway / slope_sunset | day, touka, evening | ⑥（条件表示） |
-| `route_misaki` | 8/12 | **プレースホルダ**。既存 end_misaki へ。#26 で個別章M・GOOD/BAD に差替 | — | — | — |
+| `route_misaki`→`misaki_m1` | 8/11 | **実装済み(#26)** M-1 前夜: てっぺんでの決意と別れ→家の夜（hill_memory 変種。30年後の約束の予感） | slope_sunset / home | evening→misaki / heart | — |
+| `misaki_m2` | 8/12 | M-2 丘: 鳥居合流→平たい石。ミサキのメモ（1989原文）。自分のメモとの二枚一組の真相は hill_memory 変種。**M-core-1**: 覚えていないと認める/ふりする | slope | misaki→tension(嘘分岐) / page | ⑦（2択→`misaki_honest`） |
+| `misaki_m3` | 8/12夜 | M-3 丘観測・流星数え。**M-core-2「約束の答え」**: honest/bluff で選択肢文言が分かれる（各2択） | slope_night | misaki / shoot, heart | ⑧（2択→GOOD/BAD） |
+| `end_misaki_good` | 8/12 | **MISAKI END『約束の答え』**: CG は予告END cg misaki_end 流用。三十年後の約束（TRUE END §3 の 1966 年リレーと対になる motif） | CG | misaki→title / page, shoot | — |
+| `end_bad_misaki` | 8/12 | **BAD END『七年目のすれ違い』**: 新規CGなし・カード演出のみ（決定案A §8-3）。置き去りのメモ | slope_night | — / shoot, wind | — |
 | `route_touka` | 8/12 | **プレースホルダ**。既存 end_touka へ。#27 で差替 | — | — | — |
 | `end_normal` | 8/12夜 | **拡大済み**: 町あげての観測夜。fathernote/hill_memory の変種台詞。CG normal_end | slope_night → CG | evening→title / shoot | — |
 
@@ -100,12 +104,14 @@ flowchart TD
 | `weekend_plan` | str | day4 選択⑤ | 4/13 の過ごし方。後続 day5 の 5月 対話分岐に使用 |
 | `hill_memory` | bool | ⑤a / ⑤c | 1989年の丘の記憶（決定案A §8-1）に触れた。end_normal 変種、#28 回収 |
 | `fathernote` | bool | ⑤b | 父の1966年ノート（決定案A §8-4・TRUE END 布石）。end_normal 変種、#28 star_promise 準備 |
+| `misaki_honest` | bool | M-core-1（⑦） | 「覚えていない」と認めたか。M-core-2 の選択肢文言と GOOD/BAD END の变種決定（#26） |
 
 **配点・判定は決定案A のまま実装**: aff 最大5（①〜⑤）、進入閾値 `aff>=4` + flag。⑥はゲート付き choices（条件を満たさない選択肢は表示されない）。`この街へ` は常時表示 → NORMAL 直行。両ルート条件同時成立は選択構造上不可（混在時にどちらかが閾値未満）。
 
 **素材ギャップ（正式差し替え候補 → #20/#35/#56 にリンク）**
 - 丘の昼背景（`day4_scout_misaki`/`day5` 8/11 を slope + 台詞描写で代替）
-- 父のノート小道具CG/差し替え画像（現状テキスト描写のみ）
+- 父のノート小道具CG/差し替え画像（現状テキスト描写のみ）。ミサキの約束メモ（`misaki_m2`）も同様に描写のみ
+- GOOD END CG: 予告END の cg misaki_end 流用（新規正式CGは #56/#20）
 - 5月/6月/7月 モンタージュ専用BGM（day/touka/evening 流用）
 - 夏服レイヤー（5〜8月も制服立ち絵レイヤーを流用）
 
@@ -133,33 +139,36 @@ flowchart TD
 
 - 配点: day1〜3 の既存4択 + day4(4/11)⑤ で**最大5**、進入閾値 4。**#25 で実装済み**（詳細 §1.4）。最終章前の確約は aff を増やさない想定（#26/#27）
 
-### 2.2 個別ルート内の分岐 [提案]
+### 2.2 個別ルート内の分岐 ── 章M **実装済み（#26・2026-11-09）** / 章T [提案]
 
 各個別章に 2 箇所の中核選択肢（決断系）。
 
 ```
-個別章M: M-core-1(七年前の約束の真相 §story-bible 未決3)
-          M-core-2(流星群の夜の前日、ミサキと向き合う覚悟)
-          GOOD: M-core-2 正解 →「約束の答え」→ GOOD END
-          BAD : 誤答/回避 →「七年目のすれ違い」BAD END
+個別章M [実装済み]: M-core-1(七年前の約束の真相。label misaki_m2 の menu。
+          「覚えていない、と正直に認める」→ misaki_honest=True / 嘘→False。
+          メモの原文=決定案A §8-1 の 1989年丘の約束そのもの。hill_memory で二枚一組の真相変種)
+          M-core-2(8/12夜「約束の答え」。label misaki_m3 の menu。honest/bluff で文言差分・各2択)
+          GOOD: M-core-2 正解 → end_misaki_good「約束の答え」(endings_seen: misaki_good)
+          BAD : 誤答/回避 → end_bad_misaki「七年目のすれ違い」(endings_seen: bad_misaki)
 個別章T: T-core-1(父の望遠鏡と遺志)
           T-core-2(観測を続ける理由＝自分の気持ちの承認)
           GOOD: T-core-2 正解 →「二人の観測」→ GOOD END
           BAD : 誤答/回避 →「冬の星座の別れ」BAD END
 ```
 
-- BAD END は `end_bad_misaki` / `end_bad_touka` として `persistent.endings_seen.add("bad_misaki")…` に記録 [提案]（有無・本数は story-bible 未決6 と連動）
+- BAD END は `end_bad_misaki`（実装済み）/ `end_bad_touka`（#27）として `persistent.endings_seen.add(...)` に記録。END リスト（おまけ）にも `ENDING_LIST` 経由で解放表示（misaki_good/bad_misaki エントリ実装済み）
 
-### 2.3 エンディング一覧（製品版想定）[提案]
+### 2.3 エンディング一覧（ID=persistent.endings_seen のキー）
 
-| ID | 名称 | 種別 | 解放条件 |
-|---|---|---|---|
-| `end_misaki_good` | ミサキ GOOD END | GOOD | ミサキルート M-core-2 正解 |
-| `end_misaki_bad` | 七年目のすれ違い | BAD | ミサキルート M-core-2 誤答 |
-| `end_touka_good` | 二人の観測 | GOOD | 冬華ルート T-core-2 正解 |
-| `end_touka_bad` | 冬の星座の別れ | BAD | 冬華ルート T-core-2 誤答 |
-| `end_normal` | みんなで見上げる星空 | NORMAL | ルート未進入 |
-| `end_true` | 星見坂のセレナーデ（TRUE） | TRUE | §3 条件 |
+| ID | 名称 | 種別 | 解放条件 | 状況 |
+|---|---|---|---|---|
+| `misaki_good` | MISAKI END『約束の答え』 | GOOD | ミサキルート M-core-2 正解 | **実装済み(#26)** |
+| `bad_misaki` | 七年目のすれ違い | BAD | ミサキルート M-core-2 誤答/回避 | **実装済み(#26)** |
+| `touka_good` | 二人の観測 | GOOD | 冬華ルート T-core-2 正解 | #27 |
+| `bad_touka` | 冬の星座の別れ | BAD | 冬華ルート T-core-2 誤答 | #27 |
+| `normal` | NORMAL END（八月十二日、全員で見上げる星空） | NORMAL | ルート未進入 | 実装済み(#25) |
+| `end_true` | 星見坂のセレナーデ（TRUE） | TRUE | §3 条件 | #28 |
+| `misaki`/`touka` | 予告END（体験版） | 温存 | decide_ending 経由（本編未参照） | 互換温存 |
 
 ## 3. TRUE END 進入条件 [提案]
 

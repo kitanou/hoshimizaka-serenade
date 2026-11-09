@@ -11,6 +11,7 @@ default met_kaede = False      # 楓と会った
 default weekend_plan = ""      # day4 週末⑤: "misaki" / "touka" / "none"
 default hill_memory = False    # 1989年の丘の記憶に触れた（⑤a/⑤c）
 default fathernote = False     # 父の1966年観測ノートを見た（⑤b）。TRUE END 布石（#28）
+default misaki_honest = False  # ミサキルート M-core-1 で「覚えていない」と認めた（#26）
 
 default persistent.op_seen = False
 default persistent.endings_seen = set()

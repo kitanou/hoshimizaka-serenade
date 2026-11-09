@@ -2,6 +2,8 @@
 
 define ENDING_LIST = [
     ("misaki", "ミサキ 予告END", "夜の坂道で、あの子と約束を。"),
+    ("misaki_good", "MISAKI END『約束の答え』", "七年目の約束に、返事を書いた。"),
+    ("bad_misaki", "MISAKI BAD END『七年目のすれ違い』", "流星の尾が、二人の間を横切った。"),
     ("touka", "冬華 予告END", "屋上の望遠鏡のそばで。"),
     ("normal", "NORMAL END", "八月十二日、全員で見上げる星空。"),
 ]

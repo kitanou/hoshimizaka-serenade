@@ -97,14 +97,10 @@ label day5:
         "この街へ（夏休み）":
             jump end_normal
 
-## ---- ルート分岐先（プレースホルダ） ----
-## #26: ミサキ個別ルート（day8M-1..3 + GOOD/BAD）へ差し替え予定。差し替え時は demo_end_card_misaki を GOOD/BAD 演出に置換。
+## ---- ルート分岐先 ----
+## route_misaki → story/misaki_route.rpy（#26 実装済み: M-1..3 + GOOD/BAD END）
 ## #27: 冬華個別ルート（day8T-1..3 + GOOD/BAD）へ差し替え予定。同上。
 ## #28: TRUE END は両 GOOD 視聴 + star_promise の最終章（route-flow §3）として本ラベルとは別に実装。
-
-label route_misaki:
-    "八月十二日。約束の丘へ、俺は走る――"
-    jump end_misaki
 
 label route_touka:
     "八月十二日。観測の屋上へ、俺は走る――"
